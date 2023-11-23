@@ -1,5 +1,7 @@
 import psutil
 from queue import PriorityQueue
+from queue import Queue
+
 import math
 
 
@@ -42,13 +44,14 @@ class Problem:
 
     # Euclidean distance
     def heuristic(self, node):
-        if self.heuristic:
+        if self.is_heuristic:
             return math.sqrt((node.position[0] - self.goal[0]) ** 2 + (node.position[1] - self.goal[1]) ** 2)
         else:
             return 0
 
 
 def a_star_search(problem):
+    counter = 0
     start_node = Node(problem.start, problem)
     frontier = PriorityQueue()
     frontier.put(start_node)
@@ -56,11 +59,69 @@ def a_star_search(problem):
     while not frontier.empty():
         node = frontier.get()
         if problem.is_goal(node):
+            print(counter)
             return node
         explored.add(tuple(node.position))
         for neighbor in problem.get_neighbors(node):
             if neighbor.position not in explored:
                 frontier.put(neighbor)
+        counter += 1
+    return None
+
+
+def bfs_search(problem):
+    counter = 0
+    start_node = Node(problem.start, problem)
+    frontier = Queue()
+    frontier.put(start_node)
+    explored = set()
+    while not frontier.empty():
+        node = frontier.get()
+        if problem.is_goal(node):
+            print(counter)
+            return node
+        explored.add(tuple(node.position))
+        for neighbor in problem.get_neighbors(node):
+            if neighbor.position not in explored:
+                frontier.put(neighbor)
+        counter += 1
+    return None
+
+
+def dfs_search(problem):
+    counter = 0
+    start_node = Node(problem.start, problem)
+    frontier = [start_node]
+    explored = set()
+    while len(frontier) != 0:
+        node = frontier.pop()
+        if problem.is_goal(node):
+            print(counter)
+            return node
+        explored.add(tuple(node.position))
+        for neighbor in problem.get_neighbors(node):
+            if neighbor.position not in explored:
+                frontier.append(neighbor)
+        counter += 1
+    return None
+
+
+def ucs(problem):
+    counter = 0
+    start_node = Node(problem.start, problem)
+    frontier = PriorityQueue()
+    explored = set()
+    frontier.put(start_node)
+    while not frontier.empty():
+        node = frontier.get()
+        if problem.is_goal(node):
+            print(counter)
+            return node
+        explored.add(tuple(node.position))
+        for neighbor in problem.get_neighbors(node):
+            if neighbor.position not in explored:
+                frontier.put(neighbor)
+        counter += 1
     return None
 
 
@@ -81,7 +142,7 @@ def print_path(node):
 # Example usage
 grid_example = [
     ["0", "0", "0", "-1", "0"],
-    ["0", "0", "0", "-1", "0"],
+    ["0", "-1", "0", "-1", "0"],
     ["0", "-1", "0", "0", "0"],
     ["0", "0", "0", "0", "0"],
     ["0", "-1", "-1", "-1", "0"],
