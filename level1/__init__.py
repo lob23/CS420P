@@ -4,6 +4,8 @@ from queue import Queue
 
 import math
 
+from level1.read_file import read_file
+
 
 class Node:
     def __init__(self, position, problem, cost=0, parent=None):
@@ -125,8 +127,6 @@ def ucs(problem):
     return None
 
 
-
-
 def print_path(node):
     if node is None:
         print("No path found")
@@ -140,18 +140,30 @@ def print_path(node):
 
 
 # Example usage
-grid_example = [
-    ["0", "0", "0", "-1", "0"],
-    ["0", "-1", "0", "-1", "0"],
-    ["0", "-1", "0", "0", "0"],
-    ["0", "0", "0", "0", "0"],
-    ["0", "-1", "-1", "-1", "0"],
-    ["0", "0", "0", "0", "0"]
-]
+file = read_file()
+start_position = ()
+goal_position = ()
+start_position_column = -1
+goal_position_column = -1
+row_index = 0
 
-start_position = (0, 0)
-goal_position = (5, 4)
-problem = Problem(grid_example, start_position, goal_position, is_heuristic=True)
+grid = file['floor1']['floor_data']
+for line in grid:
+    if 'A1' in line:
+        start_position_column = line.index('A1')
+        start_position = (row_index, start_position_column)
+        grid[row_index][start_position_column] = '0'
+
+    if 'T1' in line:
+        start_position_column = line.index('T1')
+        goal_position = (row_index, start_position_column)
+        grid[row_index][start_position_column] = '0'
+
+    row_index += 1
+
+print(grid, start_position, goal_position)
+
+problem = Problem(grid, start_position, goal_position, is_heuristic=True)
 
 path = a_star_search(problem)
 print_path(path)

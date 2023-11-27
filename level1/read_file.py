@@ -1,7 +1,7 @@
 import re
 
 
-def read_multi_floor_txt():
+def read_file():
     # Open file and read the content
     f = open('input.txt')
     file_content = f.read()
@@ -47,4 +47,4 @@ def read_multi_floor_txt():
         }
     return floor_data
 
-print(read_multi_floor_txt())
+print(read_file())
