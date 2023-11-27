@@ -1,7 +1,9 @@
 import pygame
+from utils.read_file import read_file
+from level1.__init__ import level1
 
 WIDTH = 600
-WIN = pygame.display.set_mode((WIDTH, WIDTH))
+WIN = pygame.display.set_mode((WIDTH + 200, WIDTH))
 pygame.display.set_caption("Path Finding")
 
 RED = (255, 0, 0)
@@ -17,11 +19,11 @@ TURQUOISE = (64, 224, 208)
 
 
 class Spot:
-    def __init__(self, row, col, width, total_rows, total_columns ):
+    def __init__(self, row, col, width, total_rows, total_columns):
         self.row = row
         self.col = col
-        self.x = row * width
-        self.y = col * width
+        self.x = col * width
+        self.y = row * width
         self.color = WHITE
         self.neighbors = []
         self.width = width
@@ -68,7 +70,7 @@ class Spot:
         self.color = PURPLE
 
     def draw(self, win, grid_start_x, grid_start_y):
-        pygame.draw.rect(win, self.color, (self.x + grid_start_x, self.y + grid_start_y, self.width , self.width  ))
+        pygame.draw.rect(win, self.color, ( self.x + grid_start_x, self.y + grid_start_y, self.width, self.width))
 
     def update_neighbors(self, grid):
         self.neighbors = []
@@ -118,45 +120,25 @@ def draw_grid(win, rows, column, width, grid_start_x, grid_start_y):
     gap = gap_fn(rows, column, width)
     for i in range(rows + 1):
         pygame.draw.line(win, GREY, (grid_start_x, grid_start_y + i * gap),
-                         (grid_start_x+ column * gap, grid_start_y+ i * gap))
+                         (grid_start_x + column * gap, grid_start_y + i * gap))
         for j in range(column + 1):
-            pygame.draw.line(win, GREY, (j * gap + grid_start_x, grid_start_y), (grid_start_x + j * gap, grid_start_y + rows * gap))
+            pygame.draw.line(win, GREY, (j * gap + grid_start_x, grid_start_y),
+                             (grid_start_x + j * gap, grid_start_y + rows * gap))
 
 
-def draw(win, grid, rows, column, width,  grid_start_x, grid_start_y):
+def draw(win, grid, rows, column, width, grid_start_x, grid_start_y):
     win.fill(WHITE)
 
     for row in grid:
         for spot in row:
             spot.draw(win, grid_start_x, grid_start_y)
 
-    draw_grid(win, rows, column, width,  grid_start_x, grid_start_y)
+    draw_grid(win, rows, column, width, grid_start_x, grid_start_y)
     pygame.display.update()
 
 
 def main(win, width):
-    ROWS = 10
-    COLUMN = 20
-    grid = make_grid(ROWS, COLUMN, width)
-    spot = grid[1][0]
-    spot.make_barrier()
-
-    # Calculate the total grid size
-    total_grid_width = COLUMN * (width // COLUMN)
-    total_grid_height = ROWS * (width // COLUMN)
-
-    # Calculate the starting position to center the grid
-    grid_start_x = (WIDTH - total_grid_width) // 2
-    grid_start_y = (WIDTH - total_grid_height) // 2
-
-
-    run = True
-    while run:
-        draw(win, grid, ROWS, COLUMN, width,  grid_start_x, grid_start_y)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-    pygame.quit()
+    level1(win, width, make_grid, draw)
 
 
 main(WIN, WIDTH)

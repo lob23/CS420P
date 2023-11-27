@@ -1,11 +1,10 @@
+import psutil
 from queue import PriorityQueue
 from queue import Queue
-import pygame
 
 import math
 
 from utils.read_file import read_file
-
 
 class Node:
     def __init__(self, position, problem, cost=0, parent=None):
@@ -52,7 +51,7 @@ class Problem:
             return 0
 
 
-def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, rows, columns):
+def a_star_search(problem):
     counter = 0
     start_node = Node(problem.start, problem)
     frontier = PriorityQueue()
@@ -61,20 +60,12 @@ def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, 
     while not frontier.empty():
         node = frontier.get()
         if problem.is_goal(node):
-            visual_grid[node.position[0]][node.position[1]].make_closed()
             print(counter)
-            draw(win, visual_grid, rows, columns, width, grid_start_x, grid_start_y)
             return node
         explored.add(tuple(node.position))
         for neighbor in problem.get_neighbors(node):
             if neighbor.position not in explored:
                 frontier.put(neighbor)
-                # Update the spot's color to represent it's in the frontier
-                visual_grid[neighbor.position[0]][neighbor.position[1]].make_open()
-
-        # Update the spot's color to represent it has been explored
-        visual_grid[node.position[0]][node.position[1]].make_closed()
-        draw(win, visual_grid, rows, columns, width, grid_start_x, grid_start_y)
         counter += 1
     return None
 
@@ -147,58 +138,31 @@ def print_path(node):
     print(path[::-1])
 
 
-def level1(win, width, make_grid, draw):
-    # Example usage
-    file = read_file('./level1/input.txt')
-    ROWS = file['floor1']['width']
-    COLUMN = file['floor1']['height']
-    start_position = ()
-    goal_position = ()
-    start_position_column = -1
-    goal_position_column = -1
-    row_index = 0
+# Example usage
+file = read_file('./input.txt')
+start_position = ()
+goal_position = ()
+start_position_column = -1
+goal_position_column = -1
+row_index = 0
 
-    visual_grid = make_grid(ROWS, COLUMN, width)
+grid = file['floor1']['floor_data']
+for line in grid:
+    if 'A1' in line:
+        start_position_column = line.index('A1')
+        start_position = (row_index, start_position_column)
+        grid[row_index][start_position_column] = '0'
 
-    # Calculate the total grid size
-    total_grid_width = COLUMN * (width // COLUMN)
-    total_grid_height = ROWS * (width // COLUMN)
+    if 'T1' in line:
+        start_position_column = line.index('T1')
+        goal_position = (row_index, start_position_column)
+        grid[row_index][start_position_column] = '0'
 
-    # Calculate the starting position to center the grid
-    grid_start_x = (width - total_grid_width) // 2
-    grid_start_y = (width - total_grid_height) // 2
+    row_index += 1
 
-    grid = file['floor1']['floor_data']
-    for line in grid:
-        if 'A1' in line:
-            start_position_column = line.index('A1')
-            start_position = (row_index, start_position_column)
-            grid[row_index][start_position_column] = '0'
-            visual_grid[row_index][start_position_column].make_start()
+print(grid, start_position, goal_position)
 
-        if 'T1' in line:
-            start_position_column = line.index('T1')
-            goal_position = (row_index, start_position_column)
-            grid[row_index][start_position_column] = '0'
-            visual_grid[row_index][start_position_column].make_end()
+problem = Problem(grid, start_position, goal_position, is_heuristic=True)
 
-        for column_index, cell in enumerate(line):
-            if cell == '-1':
-                visual_grid[row_index][column_index].make_barrier()
-
-        row_index += 1
-
-    problem = Problem(grid, start_position, goal_position, is_heuristic=True)
-
-    print(grid, start_position, goal_position)
-
-    run = True
-    while run:
-        draw(win, visual_grid, ROWS, COLUMN, width, grid_start_x, grid_start_y)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.KEYDOWN:
-                a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, ROWS, COLUMN)
-
-    pygame.quit()
+path = a_star_search(problem)
+print_path(path)

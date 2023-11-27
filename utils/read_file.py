@@ -1,9 +1,9 @@
 import re
 
 
-def read_file():
+def read_file(url):
     # Open file and read the content
-    f = open('input.txt')
+    f = open(url)
     file_content = f.read()
     # Split the content into lines
     lines = file_content.strip().split('\n')
@@ -47,4 +47,4 @@ def read_file():
         }
     return floor_data
 
-print(read_file())
+# print(read_file('../level1/input.txt'))
