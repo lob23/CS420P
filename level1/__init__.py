@@ -8,11 +8,12 @@ from utils.read_file import read_file
 
 
 class Node:
-    def __init__(self, position, problem, cost=0, parent=None):
+    def __init__(self, position, problem, cost=0, parent=None, spot = None):
         self.cost = cost
         self.position = position
         self.parent = parent
         self.problem = problem
+        self.spot = spot
 
     def __lt__(self, other):
         return self.cost + self.problem.heuristic(self) < other.cost + other.problem.heuristic(other)
@@ -25,7 +26,7 @@ class Problem:
         self.goal = goal
         self.is_heuristic = is_heuristic
 
-    def get_neighbors(self, node):
+    def get_neighbors(self, node, visual_grid):
         directions = [(0, 1), (1, 0), (-1, 0), (0, -1)]
         diagonal_directions = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         neighbors = []
@@ -33,12 +34,12 @@ class Problem:
         for dx, dy in directions:
             x, y = node.position[0] + dx, node.position[1] + dy
             if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1':
-                neighbors.append(Node((x, y), self, node.cost + 1, node))
+                neighbors.append(Node((x, y), self, node.cost + 1, node, visual_grid[x][y]))
         for dx, dy in diagonal_directions:
             x, y = node.position[0] + dx, node.position[1] + dy
             if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1':
                 if self.grid[x][node.position[1]] != '-1' and self.grid[node.position[0]][y] != '-1':
-                    neighbors.append(Node((x, y), self, node.cost + math.sqrt(2), node))
+                    neighbors.append(Node((x, y), self, node.cost + math.sqrt(2), node, visual_grid[x][y]))
         return neighbors
 
     def is_goal(self, node):
@@ -47,14 +48,14 @@ class Problem:
     # Euclidean distance
     def heuristic(self, node):
         if self.is_heuristic:
-            return math.sqrt((node.position[0] - self.goal[0]) ** 2 + (node.position[1] - self.goal[1]) ** 2)
+            return abs(node.position[0] - self.goal[0]) + abs(node.position[1] - self.goal[1])
         else:
             return 0
 
 
 def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, rows, columns):
     counter = 0
-    start_node = Node(problem.start, problem)
+    start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]] )
     frontier = PriorityQueue()
     frontier.put(start_node)
     explored = set()
@@ -66,7 +67,7 @@ def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, 
             draw(win, visual_grid, rows, columns, width, grid_start_x, grid_start_y)
             return node
         explored.add(tuple(node.position))
-        for neighbor in problem.get_neighbors(node):
+        for neighbor in problem.get_neighbors(node, visual_grid):
             if neighbor.position not in explored:
                 frontier.put(neighbor)
                 # Update the spot's color to represent it's in the frontier
@@ -139,12 +140,10 @@ def print_path(node):
     if node is None:
         print("No path found")
         return
-    path = []
-    while node.parent is not None:
-        path.append(node.position)
+
+    while node is not None:
+        node.spot.make_path()
         node = node.parent
-    path.append(node.position)
-    print(path[::-1])
 
 
 def level1(win, width, make_grid, draw):
@@ -199,6 +198,6 @@ def level1(win, width, make_grid, draw):
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
-                a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, ROWS, COLUMN)
-
+                node = a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, ROWS, COLUMN)
+                print_path(node)
     pygame.quit()

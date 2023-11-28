@@ -26,7 +26,7 @@ def read_file(url):
 
         if current_row == -1:
             current_row = 0
-            width, height = map(int, line.split(','))
+            height, width = map(int, line.split(','))
             continue
 
         if '[' in line and ']' in line:
@@ -47,4 +47,4 @@ def read_file(url):
         }
     return floor_data
 
-# print(read_file('../level1/input.txt'))
+print(read_file('../level1/input.txt'))
