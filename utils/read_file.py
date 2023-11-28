@@ -47,4 +47,3 @@ def read_file(url):
         }
     return floor_data
 
-print(read_file('../level1/input.txt'))

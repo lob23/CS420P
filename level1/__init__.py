@@ -149,8 +149,8 @@ def print_path(node):
 def level1(win, width, make_grid, draw):
     # Example usage
     file = read_file('./level1/input.txt')
-    ROWS = file['floor1']['width']
-    COLUMN = file['floor1']['height']
+    ROWS = file['floor1']['height']
+    COLUMN = file['floor1']['width']
     start_position = ()
     goal_position = ()
     start_position_column = -1
