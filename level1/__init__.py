@@ -1,7 +1,7 @@
 from queue import PriorityQueue
 from queue import Queue
 import pygame
-
+from utils.ui import *
 import math
 
 from utils.read_file import read_file
@@ -53,7 +53,7 @@ class Problem:
             return 0
 
 
-def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, rows, columns):
+def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     counter = 0
     start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]] )
     frontier = PriorityQueue()
@@ -64,7 +64,7 @@ def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, 
         if problem.is_goal(node):
             visual_grid[node.position[0]][node.position[1]].make_closed()
             print(counter)
-            draw(win, visual_grid, rows, columns, width, grid_start_x, grid_start_y)
+            draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
             return node
         explored.add(tuple(node.position))
         for neighbor in problem.get_neighbors(node, visual_grid):
@@ -75,7 +75,7 @@ def a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, 
 
         # Update the spot's color to represent it has been explored
         visual_grid[node.position[0]][node.position[1]].make_closed()
-        draw(win, visual_grid, rows, columns, width, grid_start_x, grid_start_y)
+        draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
         counter += 1
     return None
 
@@ -146,7 +146,7 @@ def print_path(node):
         node = node.parent
 
 
-def level1(win, width, make_grid, draw):
+def level1():
     # Example usage
     file = read_file('./level1/input.txt')
     ROWS = file['floor1']['height']
@@ -157,15 +157,15 @@ def level1(win, width, make_grid, draw):
     goal_position_column = -1
     row_index = 0
 
-    visual_grid = make_grid(ROWS, COLUMN, width)
+    visual_grid = make_grid(ROWS, COLUMN, WIDTH)
 
     # Calculate the total grid size
-    total_grid_width = COLUMN * (width // COLUMN)
-    total_grid_height = ROWS * (width // COLUMN)
+    total_grid_width = COLUMN * (WIDTH // COLUMN)
+    total_grid_height = ROWS * (WIDTH // COLUMN)
 
     # Calculate the starting position to center the grid
-    grid_start_x = (width - total_grid_width) // 2
-    grid_start_y = (width - total_grid_height) // 2
+    grid_start_x = (WIDTH - total_grid_width) // 2
+    grid_start_y = (WIDTH - total_grid_height) // 2
 
     grid = file['floor1']['floor_data']
     for line in grid:
@@ -193,11 +193,11 @@ def level1(win, width, make_grid, draw):
 
     run = True
     while run:
-        draw(win, visual_grid, ROWS, COLUMN, width, grid_start_x, grid_start_y)
+        draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
-                node = a_star_search(problem, draw, grid, visual_grid, grid_start_x, grid_start_y, win, width, ROWS, COLUMN)
+                node = a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                 print_path(node)
     pygame.quit()
