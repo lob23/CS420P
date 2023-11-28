@@ -1,168 +1,134 @@
-import psutil
-from queue import PriorityQueue
-from queue import Queue
+# Python program to create a basic settings menu using the pygame_menu module 
 
-import math
+import pygame 
+import pygame_menu as pm 
+#  pip install pygame_menu
+pygame.init() 
 
-from utils.read_file import read_file
+# Screen 
+WIDTH, HEIGHT = 700, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT)) 
 
-class Node:
-    def __init__(self, position, problem, cost=0, parent=None):
-        self.cost = cost
-        self.position = position
-        self.parent = parent
-        self.problem = problem
+# Standard RGB colors 
+RED = (255, 0, 0) 
+GREEN = (0, 255, 0) 
+BLUE = (0, 0, 255) 
+CYAN = (0, 100, 100) 
+BLACK = (0, 0, 0) 
+WHITE = (255, 255, 255) 
 
-    def __lt__(self, other):
-        return self.cost + self.problem.heuristic(self) < other.cost + other.problem.heuristic(other)
-
-
-class Problem:
-    def __init__(self, grid, start, goal, is_heuristic=False):
-        self.grid = grid
-        self.start = start
-        self.goal = goal
-        self.is_heuristic = is_heuristic
-
-    def get_neighbors(self, node):
-        directions = [(0, 1), (1, 0), (-1, 0), (0, -1)]
-        diagonal_directions = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
-        neighbors = []
-
-        for dx, dy in directions:
-            x, y = node.position[0] + dx, node.position[1] + dy
-            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1':
-                neighbors.append(Node((x, y), self, node.cost + 1, node))
-        for dx, dy in diagonal_directions:
-            x, y = node.position[0] + dx, node.position[1] + dy
-            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1':
-                if self.grid[x][node.position[1]] != '-1' and self.grid[node.position[0]][y] != '-1':
-                    neighbors.append(Node((x, y), self, node.cost + math.sqrt(2), node))
-        return neighbors
-
-    def is_goal(self, node):
-        return node.position == self.goal
-
-    # Euclidean distance
-    def heuristic(self, node):
-        if self.is_heuristic:
-            return math.sqrt((node.position[0] - self.goal[0]) ** 2 + (node.position[1] - self.goal[1]) ** 2)
-        else:
-            return 0
+# Main function of the program 
 
 
-def a_star_search(problem):
-    counter = 0
-    start_node = Node(problem.start, problem)
-    frontier = PriorityQueue()
-    frontier.put(start_node)
-    explored = set()
-    while not frontier.empty():
-        node = frontier.get()
-        if problem.is_goal(node):
-            print(counter)
-            return node
-        explored.add(tuple(node.position))
-        for neighbor in problem.get_neighbors(node):
-            if neighbor.position not in explored:
-                frontier.put(neighbor)
-        counter += 1
-    return None
+def main(): 
+	# List that is displayed while selecting the graphics level 
+	graphics = [("Low", "low"), 
+				("Medium", "medium"), 
+				("High", "high"), 
+				("Ultra High", "ultra high")] 
+
+	# List that is displayed while selecting the window resolution level 
+	resolution = [("1920x1080", "1920x1080"), 
+				("1920x1200", "1920x1200"), 
+				("1280x720", "1280x720"), 
+				("2560x1440", "2560x1440"), 
+				("3840x2160", "3840x2160")] 
+
+	# List that is displayed while selecting the difficulty 
+	difficulty = [("Easy", "Easy"), 
+				("Medium", "Medium"), 
+				("Expert", "Expert")] 
+
+	# List that is displayed while selecting the player's perspective 
+	perspectives = [("FPP", "fpp"), 
+					("TPP", "tpp")] 
+
+	# This function displays the currently selected options 
+
+	def printSettings(): 
+		print("\n\n") 
+		# getting the data using "get_input_data" method of the Menu class 
+		settingsData = settings.get_input_data() 
+
+		for key in settingsData.keys(): 
+			print(f"{key}\t:\t{settingsData[key]}") 
+
+	# Creating the settings menu 
+	settings = pm.Menu(title="Settings", 
+					width=WIDTH, 
+					height=HEIGHT, 
+					theme=pm.themes.THEME_GREEN) 
+
+	# Adjusting the default values 
+	settings._theme.widget_font_size = 25
+	settings._theme.widget_font_color = BLACK 
+	settings._theme.widget_alignment = pm.locals.ALIGN_LEFT 
+
+	# Text input that takes in the username 
+	settings.add.text_input(title="User Name : ", textinput_id="username") 
+
+	# 2 different Drop-downs to select the graphics level and the resolution level 
+	settings.add.dropselect(title="Graphics Level", items=graphics, 
+							dropselect_id="graphics level", default=0) 
+	settings.add.dropselect_multiple(title="Window Resolution", items=resolution, 
+									dropselect_multiple_id="Resolution", 
+									open_middle=True, max_selected=1, 
+									selection_box_height=6) 
+
+	# Toggle switches to turn on/off the music and sound 
+	settings.add.toggle_switch( 
+		title="Muisc", default=True, toggleswitch_id="music") 
+	settings.add.toggle_switch( 
+		title="Sounds", default=False, toggleswitch_id="sound") 
+
+	# Selector to choose between the types of difficulties available 
+	settings.add.selector(title="Difficulty\t", items=difficulty, 
+						selector_id="difficulty", default=0) 
+
+	# Range slider that lets to choose a value using a slider 
+	settings.add.range_slider(title="FOV", default=60, range_values=( 
+		50, 100), increment=1, value_format=lambda x: str(int(x)), rangeslider_id="fov") 
+
+	# Fancy selector (style added to the default selector) to choose between 
+	#first person and third person perspectives 
+	settings.add.selector(title="Perspective", items=perspectives, 
+						default=0, style="fancy", selector_id="perspective") 
+
+	# clock that displays the current date and time 
+	settings.add.clock(clock_format="%d-%m-%y %H:%M:%S", 
+					title_format="Local Time : {0}") 
+
+	# 3 different buttons each with a different style and purpose 
+	settings.add.button(title="Print Settings", action=printSettings, 
+						font_color=WHITE, background_color=GREEN) 
+	settings.add.button(title="Restore Defaults", action=settings.reset_value, 
+						font_color=WHITE, background_color=RED) 
+	settings.add.button(title="Return To Main Menu", 
+						action=pm.events.BACK, align=pm.locals.ALIGN_CENTER) 
+
+	# Creating the main menu 
+	mainMenu = pm.Menu(title="Main Menu", 
+					width=WIDTH, 
+					height=HEIGHT, 
+					theme=pm.themes.THEME_GREEN) 
+
+	# Adjusting the default values 
+	mainMenu._theme.widget_alignment = pm.locals.ALIGN_CENTER 
+
+	# Button that takes to the settings menu when clicked 
+	mainMenu.add.button(title="Settings", action=settings, 
+						font_color=WHITE, background_color=GREEN) 
+
+	# An empty label that is used to add a seperation between the two buttons 
+	mainMenu.add.label(title="") 
+
+	# Exit button that is used to terminate the program 
+	mainMenu.add.button(title="Exit", action=pm.events.EXIT, 
+						font_color=WHITE, background_color=RED) 
+
+	# Lets us loop the main menu on the screen 
+	mainMenu.mainloop(screen) 
 
 
-def bfs_search(problem):
-    counter = 0
-    start_node = Node(problem.start, problem)
-    frontier = Queue()
-    frontier.put(start_node)
-    explored = set()
-    while not frontier.empty():
-        node = frontier.get()
-        if problem.is_goal(node):
-            print(counter)
-            return node
-        explored.add(tuple(node.position))
-        for neighbor in problem.get_neighbors(node):
-            if neighbor.position not in explored:
-                frontier.put(neighbor)
-        counter += 1
-    return None
-
-
-def dfs_search(problem):
-    counter = 0
-    start_node = Node(problem.start, problem)
-    frontier = [start_node]
-    explored = set()
-    while len(frontier) != 0:
-        node = frontier.pop()
-        if problem.is_goal(node):
-            print(counter)
-            return node
-        explored.add(tuple(node.position))
-        for neighbor in problem.get_neighbors(node):
-            if neighbor.position not in explored:
-                frontier.append(neighbor)
-        counter += 1
-    return None
-
-
-def ucs(problem):
-    counter = 0
-    start_node = Node(problem.start, problem)
-    frontier = PriorityQueue()
-    explored = set()
-    frontier.put(start_node)
-    while not frontier.empty():
-        node = frontier.get()
-        if problem.is_goal(node):
-            print(counter)
-            return node
-        explored.add(tuple(node.position))
-        for neighbor in problem.get_neighbors(node):
-            if neighbor.position not in explored:
-                frontier.put(neighbor)
-        counter += 1
-    return None
-
-
-def print_path(node):
-    if node is None:
-        print("No path found")
-        return
-    path = []
-    while node.parent is not None:
-        path.append(node.position)
-        node = node.parent
-    path.append(node.position)
-    print(path[::-1])
-
-
-# Example usage
-file = read_file('./input.txt')
-start_position = ()
-goal_position = ()
-start_position_column = -1
-goal_position_column = -1
-row_index = 0
-
-grid = file['floor1']['floor_data']
-for line in grid:
-    if 'A1' in line:
-        start_position_column = line.index('A1')
-        start_position = (row_index, start_position_column)
-        grid[row_index][start_position_column] = '0'
-
-    if 'T1' in line:
-        start_position_column = line.index('T1')
-        goal_position = (row_index, start_position_column)
-        grid[row_index][start_position_column] = '0'
-
-    row_index += 1
-
-print(grid, start_position, goal_position)
-
-problem = Problem(grid, start_position, goal_position, is_heuristic=True)
-
-path = a_star_search(problem)
-print_path(path)
+if __name__ == "__main__": 
+	main() 

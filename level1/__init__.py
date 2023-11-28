@@ -7,8 +7,9 @@ import math
 from utils.read_file import read_file
 
 
+
 class Node:
-    def __init__(self, position, problem, cost=0, parent=None, spot = None):
+    def __init__(self, position, problem, cost=0, parent=None, spot=None):
         self.cost = cost
         self.position = position
         self.parent = parent
@@ -55,7 +56,7 @@ class Problem:
 
 def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     counter = 0
-    start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]] )
+    start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = PriorityQueue()
     frontier.put(start_node)
     explored = set()
@@ -99,9 +100,9 @@ def bfs_search(problem):
     return None
 
 
-def dfs_search(problem):
+def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     counter = 0
-    start_node = Node(problem.start, problem)
+    start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = [start_node]
     explored = set()
     while len(frontier) != 0:
@@ -110,9 +111,11 @@ def dfs_search(problem):
             print(counter)
             return node
         explored.add(tuple(node.position))
-        for neighbor in problem.get_neighbors(node):
+        node.spot.make_closed()
+        for neighbor in problem.get_neighbors(node, visual_grid):
             if neighbor.position not in explored:
                 frontier.append(neighbor)
+                neighbor.spot.make_open()
         counter += 1
     return None
 
@@ -194,10 +197,25 @@ def level1():
     run = True
     while run:
         draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
+        command = draw_menu_level1()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.KEYDOWN:
-                node = a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
-                print_path(node)
-    pygame.quit()
+                pygame.quit()
+
+        if command == 0:
+            run = False
+        if command == 1:
+            print_path(dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+            command = -1
+        if command == 2:
+            # print_path(bfs_search(problem))
+            command = -1
+        if command == 3:
+            # print_path(ucs(problem))
+            command = -1
+        if command == 4:
+            print_path(a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+            command = -1
+
+        # pygame.display.update()
