@@ -104,8 +104,8 @@ def find_path(map_data):
         if (current_node.name, tuple(current_node.keys)) not in visited:
             if current_node.name == Node.goal:
                 return reconstruct_path(current_node)
-            x = current_node.children()
-            for child in x:
+            visited.add((current_node.name, tuple(current_node.keys)))
+            for child in current_node.children():
                 index = next((i for i, e in enumerate(frontier.queue) if e.name == child.name and e.keys == child.keys), -1)
                 if (child.name, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
