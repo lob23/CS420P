@@ -26,20 +26,21 @@ class Problem:
         self.goal = goal
         self.is_heuristic = is_heuristic
 
-    def get_neighbors(self, node, visual_grid):
+
+    def get_neighbors(self, node, visual_grid, explored):
         directions = [(0, 1), (1, 0), (-1, 0), (0, -1)]
         diagonal_directions = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         neighbors = []
 
         for dx, dy in directions:
             x, y = node.position[0] + dx, node.position[1] + dy
-            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1':
+            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1' and tuple((x,y)) not in explored:
                 neighbors.append(Node((x, y), self, node.cost + 1, node, visual_grid[x][y]))
-        # for dx, dy in diagonal_directions:
-        #     x, y = node.position[0] + dx, node.position[1] + dy
-        #     if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1':
-        #         if self.grid[x][node.position[1]] != '-1' and self.grid[node.position[0]][y] != '-1':
-        #             neighbors.append(Node((x, y), self, node.cost + math.sqrt(2), node, visual_grid[x][y]))
+        for dx, dy in diagonal_directions:
+            x, y = node.position[0] + dx, node.position[1] + dy
+            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1' and tuple((x,y)) not in explored:
+                if self.grid[x][node.position[1]] != '-1' and self.grid[node.position[0]][y] != '-1':
+                    neighbors.append(Node((x, y), self, node.cost + math.sqrt(2), node, visual_grid[x][y]))
         return neighbors
 
     def is_goal(self, node):
@@ -68,11 +69,11 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
             return node
         explored.add(tuple(node.position))
         print(explored)
-        for neighbor in problem.get_neighbors(node, visual_grid):
-            if tuple(neighbor.position) not in explored:
-                frontier.put(neighbor)
-                # Update the spot's color to represent it's in the frontier
-                visual_grid[neighbor.position[0]][neighbor.position[1]].make_open()
+        for neighbor in problem.get_neighbors(node, visual_grid, explored):
+            # if tuple(neighbor.position) not in explored:
+            frontier.put(neighbor)
+            # Update the spot's color to represent it's in the frontier
+            visual_grid[neighbor.position[0]][neighbor.position[1]].make_open()
 
         # Update the spot's color to represent it has been explored
         visual_grid[node.position[0]][node.position[1]].make_closed()
@@ -97,10 +98,10 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
 
         explored.add(tuple(node.position))
 
-        for neighbor in problem.get_neighbors(node, visual_grid):
-            if tuple(neighbor.position) not in explored:
-                frontier.put(neighbor)
-                visual_grid[neighbor.position[0]][neighbor.position[1]].make_open()
+        for neighbor in problem.get_neighbors(node, visual_grid, explored):
+            # if tuple(neighbor.position) not in explored:
+            frontier.put(neighbor)
+            visual_grid[neighbor.position[0]][neighbor.position[1]].make_open()
 
         counter += 1
         visual_grid[node.position[0]][node.position[1]].make_closed()
@@ -122,10 +123,10 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
         node.spot.make_closed()
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
-        for neighbor in problem.get_neighbors(node, visual_grid):
-            if neighbor.position not in explored:
-                frontier.append(neighbor)
-                neighbor.spot.make_open()
+        for neighbor in problem.get_neighbors(node, visual_grid, explored):
+            # if neighbor.position not in explored:
+            frontier.append(neighbor)
+            neighbor.spot.make_open()
         counter += 1
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
@@ -142,14 +143,14 @@ def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
         node = frontier.get()
         if problem.is_goal(node):
             print(counter)
+            draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
             return node
         explored.add(tuple(node.position))
         node.spot.make_closed()
-        draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-        for neighbor in problem.get_neighbors(node, visual_grid):
-            if neighbor.position not in explored:
-                frontier.put(neighbor)
-                neighbor.spot.make_open()
+        for neighbor in problem.get_neighbors(node, visual_grid, explored):
+            # if neighbor.position not in explored:
+            frontier.put(neighbor)
+            neighbor.spot.make_open()
 
         counter += 1
 
@@ -227,6 +228,7 @@ def level1():
     play_again = False
     while run:
         draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
+        # command = -1
         command = draw_menu_level1()
 
         if play_again and command > 0:
@@ -256,16 +258,17 @@ def level1():
 
         elif command == 4:
             problem.is_heuristic = True
-            print_path(a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+            node = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+            print_path(node)
             command = -1
             play_again = True
-
-        pygame.display.update()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+        pygame.time.wait(100)
+        pygame.display.update()
 
         # pygame.display.update()
 
