@@ -214,7 +214,6 @@ def draw_menu_level1():
     if button4.check_clicked():
         command = 4
 
-    pygame.display.update()
     return command
 
 def draw_game():
