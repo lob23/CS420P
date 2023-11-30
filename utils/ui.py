@@ -29,8 +29,13 @@ LIME = (0, 255, 0)
 CORAL = (255, 127, 80)
 INDIGO = (75, 0, 130)
 
+class UI:
+    gap = 0
+
 pygame.font.init()
 font = pygame.font.SysFont('freesansbold', 24)
+font_scale = pygame.font.SysFont('freesansbold', int(24/66 * UI.gap))
+
 
 
 class Spot:
@@ -69,7 +74,7 @@ class Spot:
         self.color = WHITE
 
     def make_start(self):
-        self.color = ORANGE
+        self.color = NAVY
 
     def make_closed(self):
         self.color = RED
@@ -82,7 +87,7 @@ class Spot:
 
     def make_visited(self):
         self.num_visited += 1
-        self.color = self.get_heatmap_color(self.num_visited / 10)
+        self.color = self.get_heatmap_color(self.num_visited / 7)
 
     def make_end(self):
         self.color = TURQUOISE
@@ -169,6 +174,7 @@ def gap_fn(rows, column, width):
 def make_grid(rows, column, width):
     grid = []
     gap = gap_fn(rows, column, width)
+    UI.gap = gap
     for i in range(rows):
         grid.append([])
         for j in range(column):
