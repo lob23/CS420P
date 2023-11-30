@@ -34,11 +34,11 @@ class Dnode:
     vgoal = None
     map_data = None
 
-    def __init__(self, name, parent=None, g=0):
+    def __init__(self, name: str, value: (int, int, int), parent=None, g=0):
         self.parent = parent
         self.name = name
         self.keys = parent.keys.copy() if parent is not None else set()
-        self.value = Dnode.map_data['atkds'][name]
+        self.value = value
         self.g = g
         if self.name.startswith("K") and self.name[1:] not in self.keys:
             self.keys.add(self.name[1:])
@@ -54,6 +54,10 @@ class Dnode:
 
     def cost(self):
         return self.h() + self.g
+
+    @staticmethod
+    def is_reachable(cell):
+        return cell != "-1"
 
     def children(self):
         queue = Queue()
@@ -74,30 +78,30 @@ class Dnode:
             if (x, y) not in visited:
                 visited.add((x, y))
                 if grid[x][y].startswith("T"):
-                    return [Dnode(grid[x][y], self)]
+                    return [Dnode(grid[x][y], (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z)))]
                 if (x, y) != (self.value[0], self.value[1]):
                     if grid[x][y] == "DO" or grid[x][y] == "UP":
-                        children.append(Dnode(grid[x][y] + str(z), self, chebyshev_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z))))
                     elif grid[x][y].startswith("K"):
-                        children.append(Dnode(grid[x][y], self, chebyshev_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z))))
                     elif re.search(r'^D(\d+)$', grid[x][y]) is not None:
-                        children.append(Dnode(grid[x][y], self, chebyshev_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z))))
                         continue
-                if x > 0 and grid[x - 1][y] != "-1":
+                if x > 0 and Dnode.is_reachable(grid[x - 1][y]):
                     queue.put((x - 1, y))
-                if x < Boundary.N - 1 and grid[x + 1][y] != "-1":
+                if x < Boundary.N - 1 and Dnode.is_reachable(grid[x + 1][y]):
                     queue.put((x + 1, y))
-                if y > 0 and grid[x][y - 1] != "-1":
+                if y > 0 and Dnode.is_reachable(grid[x][y - 1]):
                     queue.put((x, y - 1))
-                if y < Boundary.M - 1 and grid[x][y + 1] != "-1":
+                if y < Boundary.M - 1 and Dnode.is_reachable(grid[x][y + 1]):
                     queue.put((x, y + 1))
-                if (x, y + 1) in visited and (x + 1, y) in visited and grid[x + 1][y + 1] != "-1":
+                if (x, y + 1) in visited and (x + 1, y) in visited and Dnode.is_reachable(grid[x + 1][y + 1]):
                     queue.put((x + 1, y + 1))
-                if (x + 1, y) in visited and (x, y - 1) in visited and grid[x + 1][y - 1] != "-1":
+                if (x + 1, y) in visited and (x, y - 1) in visited and Dnode.is_reachable(grid[x + 1][y - 1]):
                     queue.put((x + 1, y - 1))
-                if (x, y - 1) in visited and (x - 1, y) in visited and grid[x - 1][y - 1] != "-1":
+                if (x, y - 1) in visited and (x - 1, y) in visited and Dnode.is_reachable(grid[x - 1][y - 1]):
                     queue.put((x - 1, y - 1))
-                if (x - 1, y) in visited and (x, y + 1) in visited and grid[x - 1][y + 1] != "-1":
+                if (x - 1, y) in visited and (x, y + 1) in visited and Dnode.is_reachable(grid[x - 1][y + 1]):
                     queue.put((x - 1, y + 1))
         return children
 
@@ -210,28 +214,25 @@ def find_dtree(map_data):
     Dnode.map_data = map_data
     Dnode.goal = 'T1'
     Dnode.vgoal = map_data['atkds'][Dnode.goal]
-    start = Dnode('A1')
+    start = Dnode('A1', map_data['atkds']['A1'])
     frontier = PriorityQueue()
     frontier.put(start)
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if (current_node.name, tuple(current_node.keys)) not in visited:
+        if (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
                 return current_node.reconstruct_path()
-            visited.add((current_node.name, tuple(current_node.keys)))
-            # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
+            visited.add((current_node.value, tuple(current_node.keys)))
             for child in current_node.children():
-                index = next((i for i, e in enumerate(frontier.queue) if e.name == child.name and e.keys == child.keys),
+                index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value and e.keys == child.keys),
                              -1)
-                if (child.name, tuple(child.keys)) not in visited and index == -1:
+                if (child.value, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
                     # Visualizer.visual_grid[child.value[2] - 1][child.value[0]][child.value[1]].make_start()
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
                     frontier.queue[index] = child
-        # draw_menu_level3(current_node.value[2] - 1)
-        # draw(WIN, Visualizer.visual_grid[current_node.value[2] - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
     return None
 
 
@@ -355,18 +356,21 @@ def level3(file):
                     playagain = False
                     run = False
 
+
         pygame.display.flip()
 
     #
     # dtree = find_dtree(map_data)
     # return find_path(map_data, dtree)
 
-#
-# MAP_DATA = read_file('./test.txt')
-# Boundary.N = MAP_DATA[f'floor{1}']['height']
-# Boundary.M = MAP_DATA[f'floor{1}']['width']
-# DTREE = find_dtree(MAP_DATA)
-# for NODE in DTREE:
-#     print(NODE.name)
-# print()
-# print(find_path(MAP_DATA, DTREE))
+
+def test():
+    map_data = read_file('./level3/test.txt')
+    Boundary.N = map_data[f'floor{1}']['height']
+    Boundary.M = map_data[f'floor{1}']['width']
+    dtree = find_dtree(map_data)
+    for e in dtree:
+        print(e, end=" ")
+    print()
+    path = find_path(map_data, dtree)
+    print(path)

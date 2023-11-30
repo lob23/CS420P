@@ -5,10 +5,17 @@ import re
 # atkds: agent, task, key, door, stairs
 def find_agent_and_task(row: list[str], current_row: int, current_floor_index: int, atkds: dict):
     for i, e in enumerate(row):
-        if e.startswith('A') or e.startswith('K') or e.startswith('T') or re.search(r'^D\d+$', e) is not None:
+        if e.startswith('A') or e.startswith('K') or e.startswith('T'):
             atkds.update({e: (current_row, i, current_floor_index)})
+        elif re.search(r'^D\d+$', e) is not None:
+            if e not in atkds:
+                atkds[e] = []
+            atkds[e].append((current_row, i, current_floor_index))
         elif e == 'DO' or e == 'UP':
-            atkds.update({e + str(current_floor_index): (current_row, i, current_floor_index)})
+            stair = e + str(current_floor_index)
+            if stair not in atkds:
+                atkds[stair] = []
+            atkds[stair].append((current_row, i, current_floor_index))
 
 
 def read_file(url):
@@ -35,7 +42,9 @@ def read_file(url):
             current_floor_index += 1
         else:
             row = line.split(',')
-            find_agent_and_task(row, i % (height + 1) - 2, current_floor_index, atkds)
+            count = (i % (height + 1)) - 2
+            col = height - 1 if count == -2 else count
+            find_agent_and_task(row, col, current_floor_index, atkds)
             current_floor_data.append(row)
         if i % (height + 1) == 0:
             floor_data[current_floor] = {
