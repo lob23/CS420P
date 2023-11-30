@@ -32,8 +32,9 @@ class game:
                     self.goal = (i, j)  # merge with "D" later
                 elif ("D" in self.gameMap[i][j]):
                     if (self.gameMap[i][j][1:] not in self.keys.keys()):
-                        return False
-                    self.doors[(i, j)] = self.keys[self.gameMap[i][j][1:]]
+                        self.doors[(i, j)] = []
+                    else:
+                        self.doors[(i, j)] = self.keys[self.gameMap[i][j][1:]]
                 elif ("A" in self.gameMap[i][j]):
                     self.agent = (i, j)
         return True
@@ -251,8 +252,7 @@ class game:
                 neighbors.append((x, y))
         for dx, dy in diagonal_directions:
             x, y = node[0] + dx, node[1] + dy
-            if 0 <= x < len(self.gameMap) and 0 <= y < len(self.gameMap[0]) and self.gameMap[x][y] != '-1' and (
-                    "D" not in self.gameMap[x][y]):
+            if 0 <= x < len(self.gameMap) and 0 <= y < len(self.gameMap[0]) and self.gameMap[x][y] != '-1':
                 if self.gameMap[x][node[1]] != '-1' and self.gameMap[node[0]][y] != '-1':
                     neighbors.append((x, y))
         return neighbors
@@ -304,7 +304,44 @@ class game:
                 frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal)), (temp, cost + node[1])))
 
         return None
+    
+    def GBFS(self, path_list):
+        frontier = PriorityQueue()
 
+        frontier.put((self.heuristic(self.agent, self.goal), ([self.agent], 0)))
+        i = 0
+
+        while (frontier.not_empty):
+            try:
+                cur_cost, (cur_node, cost) = frontier.get_nowait()
+            except:
+                return (False, False)
+            # i += 1
+            # print("i", i)
+
+            if (cur_node[-1] == self.goal):
+                return cur_node
+
+            if (tuple(cur_node[-1]) == self.agent and len(cur_node) > 1):
+                continue
+
+            adjacentNodes = path_list[tuple(cur_node[-1])]
+
+            for node in adjacentNodes:
+
+                if (tuple(node[0]) in self.doors.keys() and self.doors[tuple(node[0])] not in cur_node):
+                    continue
+
+                if (tuple(node[0]) in list(self.keys.values()) and tuple(node[0]) in cur_node):
+                    continue
+
+                temp = copy.deepcopy(cur_node)
+                temp.append(node[0])
+                frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal)*100), (temp, cost + node[1])))
+
+        return None
+    
+    
     def UCS(self, path_list):
         frontier = PriorityQueue()
 
@@ -580,12 +617,12 @@ def convertFileToGrid(filename):
         return gameMap
 
 
-gameMap = convertFileToGrid("./input.txt")
+gameMap = convertFileToGrid("./level2/input.txt")
 test = game(gameMap=gameMap)
 
 start = timeit.default_timer()
 
-test.algorithm()
+print(len(test.algorithm()))
 
 stop = timeit.default_timer()
 
