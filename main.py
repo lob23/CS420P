@@ -13,24 +13,27 @@ def main():
     count = 0
     while run:
         menu_command = draw_menu()
-        if menu_command == 1:
-            level1()
-        elif menu_command == 2:
-            print("level 2")
-
-        elif menu_command == 3:
-            print("level 3")
-            level3('level3/test.txt')
-            count += 1
-            print(count)
-        elif menu_command == 4:
-            print("level 4")
-
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+            if pygame.MOUSEBUTTONDOWN:
+                if menu_command == 1:
+                    level1()
+                elif menu_command == 2:
+                    print("level 2")
+
+                elif menu_command == 3:
+                    print("level 3")
+                    level3('level3/test.txt')
+                    count += 1
+                    print(count)
+                elif menu_command == 4:
+                    print("level 4")
+
+
+
 
 
         pygame.display.flip()

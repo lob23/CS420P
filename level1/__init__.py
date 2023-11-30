@@ -138,8 +138,11 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = [start_node]
     explored = set()
+    frontier_set = set()
+    frontier_set.add(tuple(start_node.position))
     while len(frontier) != 0:
         node = frontier.pop()
+        frontier_set.remove(tuple(node.position))
         if problem.is_goal(node):
             print(counter)
             return node
@@ -148,10 +151,10 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
         for neighbor in problem.get_neighbors(node, visual_grid, explored):
-            # if neighbor.position not in explored:
-            frontier.append(neighbor)
-            # pygame.time.delay(10)
-            neighbor.spot.make_open()
+            if tuple(neighbor.position) not in frontier_set:
+                frontier.append(neighbor)
+                neighbor.spot.make_open()
+                frontier_set.add(tuple(neighbor.position))
         counter += 1
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
