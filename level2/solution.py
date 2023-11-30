@@ -3,14 +3,7 @@ from queue import PriorityQueue
 from queue import Queue
 import math
 import copy
-
-
-class agent:
-    def __init__(self, position = [], path = [], cost = 0):
-        self.keys = []
-        self.position = position
-        self.path = path
-        self.cost = cost
+from collections import deque
         
 class game:
     def __init__(self, path = [], gameMap = [[]]):
@@ -22,96 +15,368 @@ class game:
         self.goal = ()
         self.agent = None
         
+    def findKeys(self):
+        for i in range (len(self.gameMap)):
+            for j in range (len(self.gameMap[0])):
+                if("K" in self.gameMap[i][j]):
+                    self.keys[self.gameMap[i][j][1:]] = (i,j)
+        
     def findGoalandKeys(self):
+        self.findKeys()
         for i in range (len(self.gameMap)):
             for j in range (len(self.gameMap[0])):
                 if(self.gameMap[i][j] == "T1"):
                     self.goal = (i,j) #merge with "D" later
-                elif("K" in self.gameMap[i][j]):
-                    self.keys[self.gameMap[i][j]] = (i,j)
                 elif("D" in self.gameMap[i][j]):
-                    self.doors[self.gameMap[i][j]] = (i,j)
+                    if (self.gameMap[i][j][1:] not in self.keys.keys()):
+                        return False
+                    self.doors[(i,j)] = self.keys[self.gameMap[i][j][1:]]
                 elif("A" in self.gameMap[i][j]):
-                    self.agent = agent([i,j])
+                    self.agent = (i,j)
+        return True
         
-    def findRoom(self, agent_pos, explored_nodes, doors, isFirstNode, isOpen):
+    # def findRoom(self, agent_pos, explored_nodes, doors, isFirstNode, isOpen):
         
-        if(agent_pos[0] < 0 or agent_pos[0] >= len(self.gameMap) or agent_pos[1] < 0 or agent_pos[1] > len(self.gameMap[0])):
-            return
+    #     if(agent_pos[0] < 0 or agent_pos[0] >= len(self.gameMap) or agent_pos[1] < 0 or agent_pos[1] > len(self.gameMap[0])):
+    #         return
         
                 
-        if(agent_pos in explored_nodes and isFirstNode == False):
-            return 
-        else: explored_nodes.add(agent_pos)
+    #     if(agent_pos in explored_nodes and isFirstNode == False):
+    #         return 
+    #     else: explored_nodes.add(agent_pos)
         
-        if(self.gameMap[agent_pos[0]][agent_pos[1]] == "-1"):
-            return 
+    #     if(self.gameMap[agent_pos[0]][agent_pos[1]] == "-1"):
+    #         return 
         
-        if("D" in self.gameMap[agent_pos[0]][agent_pos[1]] and isFirstNode == False):
-            doors.append(agent_pos)
-            return
+    #     if("D" in self.gameMap[agent_pos[0]][agent_pos[1]] and isFirstNode == False):
+    #         doors.append(agent_pos)
+    #         return
         
-        if(self.isRoom(agent_pos=agent_pos) == False):
-            isOpen[0] = True
-            doors.clear()
-            return
+    #     if(self.isRoom(agent_pos=agent_pos) == False):
+    #         isOpen[0] = True
+    #         doors.clear()
+    #         if ( "A" in self.gameMap[agent_pos[0]][agent_pos[1]]):
+    #             doors.append(agent_pos)
+    #         return
                 
-        self.findRoom((agent_pos[0] - 1, agent_pos[1]), explored_nodes, doors, False, isOpen)  
-        if(isOpen[0] == True):
-            return None    
+    #     self.findRoom((agent_pos[0] - 1, agent_pos[1]), explored_nodes, doors, False, isOpen)  
+    #     if(isOpen[0] == True):
+    #         return None    
             
-        self.findRoom((agent_pos[0] + 1, agent_pos[1]), explored_nodes, doors, False, isOpen)
-        if(isOpen[0] == True):
-            return None   
+    #     self.findRoom((agent_pos[0] + 1, agent_pos[1]), explored_nodes, doors, False, isOpen)
+    #     if(isOpen[0] == True):
+    #         return None   
         
-        self.findRoom((agent_pos[0], agent_pos[1] - 1), explored_nodes, doors, False, isOpen)
-        if(isOpen[0] == True):
-            return None   
+    #     self.findRoom((agent_pos[0], agent_pos[1] - 1), explored_nodes, doors, False, isOpen)
+    #     if(isOpen[0] == True):
+    #         return None   
         
-        self.findRoom((agent_pos[0], agent_pos[1] + 1), explored_nodes, doors, False, isOpen)
-        if(isOpen[0] == True):
-            return None   
+    #     self.findRoom((agent_pos[0], agent_pos[1] + 1), explored_nodes, doors, False, isOpen)
+    #     if(isOpen[0] == True):
+    #         return None   
+    
+    def findDoor(self, pos):
+        frontier = deque([[pos, 0]])
+        explored = set()
+        distenceDetermined = set()
         
-    def isRoom(self, agent_pos): 
-        if ((self.gameMap[agent_pos[0]][agent_pos[1]] == "0" or "A" in self.gameMap[agent_pos[0]][agent_pos[1]]) and (agent_pos[0] == 0 or agent_pos[0] == len(self.gameMap) - 1 or agent_pos[1] == 0 or agent_pos[1] == len(self.gameMap[0]) - 1)):
-            return False
+        path = []
+        routine = {}
+        
+        while(frontier):
+        
+            node, cost = frontier.popleft()
+            if (node in explored): 
+                continue
+            explored.add(node)
+            
+            neighbors = self.get_neighbors(node)
+            
+            for neighbor in neighbors:
+                if(neighbor in self.doors or neighbor == self.agent or neighbor in self.keys.values() or neighbor == self.goal):
+                    if(neighbor not in distenceDetermined and neighbor != pos):
+                        path.append([neighbor, cost + 1])
+                        distenceDetermined.add(neighbor)
+                        if((neighbor, pos) not in routine):
+                            routine[(neighbor, pos)] = node
+                
+                else:    
+                    frontier.extend([[neighbor, cost + 1]])
+                    if ((neighbor, pos) not in routine):
+                        routine[(neighbor, pos)] = node
+        
+        return (path, routine)
+            
+        
+        
+    def isRoom(self, agent_pos):  # redundant
+
         if ("A" in self.gameMap[agent_pos[0]][agent_pos[1]]):
             return False
         else: return True
         
-    def exploreDoor(self, door, foundDoors, explored):
-        door_list = []
-        
-        door_position = []
-        
-        self.findRoom(agent_pos=door, explored_nodes=explored, doors=door_position, isFirstNode=True, isOpen=[False])
-        
-        if(not door_position):
-            return [door]
-        
-        for i in door_position:
-            if(i in foundDoors): continue
-            else: foundDoors.add(i)
-            
-            explored_cur = copy.deepcopy(explored)
-            
-            exploredDoor = self.exploreDoor(i, foundDoors, explored_cur)
-            
-            for x in exploredDoor:
-                door_list.append([door, x])
+    def exploreDoor(self, door_list, door):
                 
-        return door_list
+        frontier = [[d, set()] for d in door]
+        newExplored = set()
+        # if(not door): return door_list
         
+        while (frontier):            
+            currentDoor, explored_current = frontier.pop(0)
+            if(currentDoor in door_list): continue
+            
+            if(currentDoor == self.agent): continue
+            
+            door_position = []
+
+            # if currentDoor not in door:
+            #     newExplored.add(self.doors[currentDoor])
+                
+            self.findRoom(agent_pos=currentDoor, explored_nodes=explored_current, doors=door_position, isFirstNode=True, isOpen=[False])
+            door_list[currentDoor] = door_position
+            for d in door_position:
+                frontier.append([d, copy.deepcopy(explored_current)])  
+                if (d in self.doors):
+                    frontier.append([self.doors[d], copy.deepcopy(explored_current)])
+           
+        self.backtrackPrunningImpossibleBranches(door_list, newExplored)
+        return door_list
+            
+    def backtrackPrunningImpossibleBranches (self, door_list, newExplored):
+        emptyKeys = [d for d, target in door_list.items() if not target]
+        
+        for key in emptyKeys:
+            del door_list[key]
+            newExplored.remove(self.doors[key])
+            for d, other in door_list.items():
+                if key in other:
+                    other.remove(key)
+                    
+    # def generatePath(self, door_list, coordinates, isFirst, found):
+                
+    #     path_list = []
+    #     path = []
+    #     for coordinate in coordinates:
+
+    #         if(coordinate in self.doors or (coordinate == self.goal and isFirst[0] == True)):
+    #             isFirst[0] = False
+    #             if(coordinate == self.goal):
+    #                 path = self.findOrderOfDoors(coordinate, door_list)
+    #             else:
+    #                 path = self.findOrderOfDoors(self.doors[coordinate], door_list)
+                    
+    #             if(not path_list):
+    #                 path_list = path
+    #                 continue
+    #             for p in path:
+    #                 for previousPath in path_list:
+    #                     previousPath.extend(p)
+        
+    #     if path_list:
+    #         ret = []
+    #         for partialPath in path_list:
+    #             # if self.agent in partialPath:
+    #             #     partialPath.remove(self.agent)
+    #             furtherPaths = self.generatePath(door_list, partialPath, isFirst, found)
+    #             if (furtherPaths):
+    #                 for f in furtherPaths:
+    #                     temp = copy.deepcopy(partialPath)
+    #                     temp.extend(f)
+    #                     ret.append(temp)
+    #             else:
+    #                 ret.append(partialPath)
+    #         return ret    
+    #     return path_list
+    
+    def generatePath(self, door_list, coordinate):
+        if(coordinate == self.agent):
+            return [[]]
+        
+        else: 
+            result = []
+            for door in door_list[tuple(coordinate)]:
+                furtherDoors = self.generatePath(door_list, door)
+                for furtherDoor in furtherDoors:
+                    temp = [door]
+                    temp.extend(furtherDoor)
+                    result.append(temp)
+            return result
+                
+    def setKey(self, door_list, door_path, door_with_keys, startingPoint, completeList):
+        isStart = False
+        if (startingPoint == len(door_path) - 1):
+            completeList.append(door_with_keys)
+            return 
+        for i in range (0, len(door_with_keys)):
+            if(tuple(door_with_keys[i]) not in door_list):
+                continue 
+            
+            if(door_with_keys[i] == door_path[startingPoint]):
+                isStart = True 
+                
+            
+            if (isStart == True):
+                for j in range(i+1, len(door_with_keys)):
+                    if(door_with_keys[j-1] in door_list[self.doors[door_path[startingPoint]]]):
+                        return 
+                    else:
+                        temp = copy.deepcopy(door_with_keys)
+                        print(temp)
+                        temp.insert(j, door_list[self.doors[door_path[startingPoint]]])
+                        self.setKey(door_list, door_path, temp, startingPoint + 1, completeList)
+                        
+                
+    def findOrderOfDoors(self, coordinate, door_list):
+        path = []
+        
+        if(coordinate == self.agent):
+            return [[]]
+        
+        for i in door_list[coordinate]:
+            partialRoutes = self.findOrderOfDoors(i, door_list)
+            for route in partialRoutes:
+                temp = [coordinate]
+                temp.extend(route)
+                path.append(temp) 
+        return path
+    
+    def get_neighbors(self, node):
+        directions = [(0, 1), (1, 0), (-1, 0), (0, -1)]
+        diagonal_directions = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+        neighbors = []
+
+        for dx, dy in directions:
+            x, y = node[0] + dx, node[1] + dy
+            if 0 <= x < len(self.gameMap) and 0 <= y < len(self.gameMap[0]) and self.gameMap[x][y] != '-1':
+                neighbors.append((x,y))
+        for dx, dy in diagonal_directions:
+            x, y = node[0] + dx, node[1] + dy
+            if 0 <= x < len(self.gameMap) and 0 <= y < len(self.gameMap[0]) and self.gameMap[x][y] != '-1' and ("D" not in self.gameMap[x][y]):
+                if self.gameMap[x][node[1]] != '-1' and self.gameMap[node[0]][y] != '-1' :
+                    neighbors.append((x,y))
+        return neighbors
+    
+    def heuristic(self, position, target):
+        return max(abs(position[0] - target[0]), abs(position[1] - target[1]))
+        
+    def getNextTarget(self, path_list, current):
+        target = []
+        
+        for x in path_list:
+            i = -1
+            if (x[i] == current):
+                temp = []
+                i -= 1
+
+        
+    def UCS(self, path_list):
+        frontier = PriorityQueue()
+        
+        frontier.put((0, [self.agent]))
+        i = 0
+        
+        while (frontier.not_empty):
+            try:
+                cost, cur_node = frontier.get_nowait()
+            except:
+                return (False, False)
+            # i += 1
+            # print("i", i)
+
+            if (cur_node[-1] == self.goal):
+                return cur_node
+            if (tuple(cur_node[-1]) == self.agent and len(cur_node) > 1): 
+                continue
+            
+            
+            adjacentNodes = path_list[tuple(cur_node[-1])]
+            
+            for node in adjacentNodes:
+                
+                if(tuple(node[0]) in self.doors.keys() and self.doors[tuple(node[0])] not in cur_node):
+                    continue
+                
+                if(tuple(node[0]) in list(self.keys.values()) and tuple(node[0]) in cur_node):
+                    continue
+                
+
+                temp = copy.deepcopy(cur_node)
+                temp.append(node[0])
+                frontier.put(((cost + node[1]), temp))
+        return None
+    
      
     def algorithm(self):
-        self.findGoalandKeys()
+        isSolvable = self.findGoalandKeys()
+        if (isSolvable == False):
+            print("unSolvable")
+            return None
         
         door_position = []
-        door_position_list = []
+        door_position_list = {}
         
-        list = self.exploreDoor(self.goal, foundDoors=set(), explored=set())
+        path_graph = {}
         
-        print(list)
+        # list = self.exploreDoor(door_list=door_position_list, door=[self.goal])
+        # print(list)
+        
+        routine = {}
+        path, subroutine= self.findDoor(self.goal)
+        if(path == False and subroutine == False):
+            return None
+        path_graph[self.goal] = path
+        routine.update(subroutine)
+        remainGraph = [path]
+        
+        while (remainGraph):
+            currentNode = remainGraph.pop(0)
+            for x in currentNode:
+                if(tuple(x[0]) in path_graph.keys()):
+                    continue
+                temp, subroutine = self.findDoor(x[0])
+                if(temp == False and subroutine == False):
+                    return None
+                path_graph[x[0]] = temp
+                remainGraph.append(temp)
+                routine.update(subroutine)
+
+        #print(path_graph)
+        
+        shortestPath = self.UCS(path_graph)
+        finalRoutine = self.getRoutine(routine, shortestPath)
+        if(not finalRoutine): 
+            print("UnSolvable")
+            return None
+        print(finalRoutine)
+        return finalRoutine
+        
+    def getRoutine(self, routine, path):
+        shortestRoutine = []
+        for p in range (0, len(path) - 1):
+            partialRoutine = self.getRoutineBetweenTwoNodes(routine, path[p], path[p+1])
+            shortestRoutine.extend(partialRoutine)
+            shortestRoutine.pop()
+        return shortestRoutine
+            
+        
+            
+    def getRoutineBetweenTwoNodes(self, routine, node, root):
+        shortesRoutine = []
+        shortesRoutine.append(node)
+        if(node == root):
+            return [root]
+        shortesRoutine.extend(self.getRoutineBetweenTwoNodes(routine, routine[(node, root)], root))
+        return shortesRoutine
+            
+
+        
+        # path = self.generatePath(list, self.goal)
+        # # print(path)
+        # cpList = []
+        # self.setKey(list, path[0], path[0], 0, cpList)
+        # print(cpList)
+        
+        
         # self.decisionTree.append([self.goal, door_position])
         # # print(door_positions_list[-1][1])
         # # print(self.keys)
@@ -125,22 +390,20 @@ class game:
         #     self.decisionTree.append([node, door_position])
         #     frontier.extend(x for x in door_position.values() if x not in frontier)
             
-        # print(self.decisionTree)            
+        # print(self.decisionTree)   
+        
                         
 grid_example = [
-    ["A1", "-1", "-1", "-1", "0"],
-    ["0", "-1", "-1", "D3", "-1"],
-    ["K3", "-1", "0", "0", "-1"],
-    ["0", "-1", "T1", "-1", "-1"],
-    ["0", "-1", "0", "-1", "0"],
-    ["0", "-1", "D2", "-1", "0"],
-    ["0", "0", "D4", "-1", "0"],
-    ["-1", "0", "D5", "-1", "0"],
-    ["-1", "-1", "0", "-1", "0"],
-    ["0", "0", "0", "-1", "0"],
-    ["0", "0", "-1", "-1", "0"],
-    ["0", "-1", "0", "K2", "-1"],
-    ["0", "0", "0", "D4", "-1"]
+    ["K1", "0", "0", "0", "-1", "-1", "-1", "-1", "-1", "-1", "0"], #0
+    ["0", "0", "0", "0", "D1", "K2", "D3", "0", "0", "-1", "0"],
+    ["0", "A1", "0", "0", "-1", "-1", "-1", "D2", "-1", "D2", "-1"],
+    ["0", "0", "0", "0", "-1", "0", "-1", "0", "T1", "0", "-1"],
+    ["0", "0", "0", "0", "-1", "0", "-1", "0", "0", "-1", "0"], #4
+    ["0", "0", "0", "0", "-1", "0", "-1", "0", "0", "0", "-1"],
+    ["0", "0", "0", "0", "-1", "0", "-1", "0", "-1", "-1", "-1"],
+    ["0", "0", "0", "0", "-1", "-1", "-1", "D2", "-1", "-1", "-1"],
+    ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+    ["0", "0", "0", "0", "0", "K3", "0", "0", "0", "0", "0"], #9
 ]      
 
 test = game(gameMap=grid_example)
