@@ -270,7 +270,46 @@ class game:
                 temp = []
                 i -= 1
 
+    def Astar(self, path_list):
+        frontier = PriorityQueue()
         
+        frontier.put((self.heuristic(self.agent, self.goal), ([self.agent], 0)))
+        i = 0
+                
+        while (frontier.not_empty):
+            try:
+                cur_cost, (cur_node, cost) = frontier.get_nowait()
+            except:
+                return (False, False)
+            # i += 1
+            # print("i", i)
+
+            
+            if (cur_node[-1] == self.goal):
+                return cur_node
+            
+            if (tuple(cur_node[-1]) == self.agent and len(cur_node) > 1): 
+                continue
+            
+            
+            adjacentNodes = path_list[tuple(cur_node[-1])]
+            
+            for node in adjacentNodes:
+                
+                if(tuple(node[0]) in self.doors.keys() and self.doors[tuple(node[0])] not in cur_node):
+                    continue
+                
+                if(tuple(node[0]) in list(self.keys.values()) and tuple(node[0]) in cur_node):
+                    continue
+                
+                temp = copy.deepcopy(cur_node)
+                temp.append(node[0])
+                frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal)), (temp, cost + node[1])))
+                
+                
+        return None
+    
+       
     def UCS(self, path_list):
         frontier = PriorityQueue()
         
@@ -307,7 +346,6 @@ class game:
                 temp.append(node[0])
                 frontier.put(((cost + node[1]), temp))
         return None
-    
      
     def algorithm(self):
         isSolvable = self.findGoalandKeys()
@@ -343,12 +381,10 @@ class game:
                 remainGraph.append(temp)
                 routine.update(subroutine)
 
-        #print(path_graph)
         if (not path_graph[self.goal]):
             print("UnSolvable")
             return None
-        
-        shortestPath = self.UCS(path_graph)
+        shortestPath = self.Astar(path_graph)
         finalRoutine = self.getRoutine(routine, shortestPath)
         if(not finalRoutine): 
             print("UnSolvable")
@@ -483,3 +519,7 @@ test.algorithm()
 stop = timeit.default_timer()
 
 print('Time: ', stop - start)  
+
+
+# Astar
+#[(8, 3), (9, 4), (10, 5), (11, 6), (12, 7), (13, 8), (14, 9), (15, 10), (16, 11), (17, 12), (18, 13), (19, 14), (19, 15), (19, 16), (19, 17), (19, 18), (19, 19), (19, 20), (19, 21), (19, 22), (19, 23), (20, 24), (21, 25), (22, 25), (23, 25), (24, 25), (25, 25), (26, 25), (27, 25), (28, 26), (28, 27), (28, 28), (28, 29), (28, 30), (28, 31), (27, 31), (26, 31), (26, 30), (26, 29), (26, 28), (25, 27), (24, 27), (23, 27), (23, 28), (23, 29), (24, 30), (24, 31)]#
