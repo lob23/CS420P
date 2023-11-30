@@ -4,15 +4,6 @@ from queue import Queue
 import math
 import copy
 from collections import deque
-
-
-class agent:
-    def __init__(self, position = [], path = [], cost = 0, explored = set()):
-        self.keys = []
-        self.position = position
-        self.path = path
-        self.cost = cost
-        self.explored = explored
         
 class game:
     def __init__(self, path = [], gameMap = [[]]):
@@ -37,9 +28,12 @@ class game:
                 if(self.gameMap[i][j] == "T1"):
                     self.goal = (i,j) #merge with "D" later
                 elif("D" in self.gameMap[i][j]):
+                    if (self.gameMap[i][j][1:] not in self.keys.keys()):
+                        return False
                     self.doors[(i,j)] = self.keys[self.gameMap[i][j][1:]]
                 elif("A" in self.gameMap[i][j]):
                     self.agent = (i,j)
+        return True
         
     # def findRoom(self, agent_pos, explored_nodes, doors, isFirstNode, isOpen):
         
@@ -282,8 +276,10 @@ class game:
         i = 0
         
         while (frontier.not_empty):
-            
-            cost, cur_node = frontier.get_nowait()
+            try:
+                cost, cur_node = frontier.get_nowait()
+            except:
+                return (False, False)
             # i += 1
             # print("i", i)
 
@@ -311,7 +307,10 @@ class game:
     
      
     def algorithm(self):
-        self.findGoalandKeys()
+        isSolvable = self.findGoalandKeys()
+        if (isSolvable == False):
+            print("unSolvable")
+            return None
         
         door_position = []
         door_position_list = {}
@@ -323,6 +322,8 @@ class game:
         
         routine = {}
         path, subroutine= self.findDoor(self.goal)
+        if(path == False and subroutine == False):
+            return None
         path_graph[self.goal] = path
         routine.update(subroutine)
         remainGraph = [path]
@@ -333,15 +334,21 @@ class game:
                 if(tuple(x[0]) in path_graph.keys()):
                     continue
                 temp, subroutine = self.findDoor(x[0])
+                if(temp == False and subroutine == False):
+                    return None
                 path_graph[x[0]] = temp
                 remainGraph.append(temp)
                 routine.update(subroutine)
 
         #print(path_graph)
+        
         shortestPath = self.UCS(path_graph)
         finalRoutine = self.getRoutine(routine, shortestPath)
+        if(not finalRoutine): 
+            print("UnSolvable")
+            return None
         print(finalRoutine)
-        # return finalRoutine
+        return finalRoutine
         
     def getRoutine(self, routine, path):
         shortestRoutine = []
@@ -387,14 +394,14 @@ class game:
         
                         
 grid_example = [
-    ["0", "0", "0", "0", "-1", "-1", "-1", "-1", "-1", "-1", "0"], #0
+    ["K1", "0", "0", "0", "-1", "-1", "-1", "-1", "-1", "-1", "0"], #0
     ["0", "0", "0", "0", "D1", "K2", "D3", "0", "0", "-1", "0"],
-    ["0", "A1", "0", "0", "-1", "-1", "D2", "D2", "-1", "-1", "-1"],
+    ["0", "A1", "0", "0", "-1", "-1", "-1", "D2", "-1", "D2", "-1"],
     ["0", "0", "0", "0", "-1", "0", "-1", "0", "T1", "0", "-1"],
     ["0", "0", "0", "0", "-1", "0", "-1", "0", "0", "-1", "0"], #4
     ["0", "0", "0", "0", "-1", "0", "-1", "0", "0", "0", "-1"],
     ["0", "0", "0", "0", "-1", "0", "-1", "0", "-1", "-1", "-1"],
-    ["0", "0", "K1", "0", "-1", "-1", "-1", "D2", "-1", "-1", "-1"],
+    ["0", "0", "0", "0", "-1", "-1", "-1", "D2", "-1", "-1", "-1"],
     ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
     ["0", "0", "0", "0", "0", "K3", "0", "0", "0", "0", "0"], #9
 ]      
