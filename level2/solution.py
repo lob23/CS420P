@@ -509,7 +509,7 @@ def convertFileToGrid(filename):
         return gameMap
                 
 
-gameMap = convertFileToGrid("./level2/input.txt")
+gameMap = convertFileToGrid("./input.txt")
 test = game(gameMap=gameMap)
         
 start = timeit.default_timer()

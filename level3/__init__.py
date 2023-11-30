@@ -23,6 +23,12 @@ class Boundary:
     M = None
 
 
+class Visualizer:
+    visual_grid = None
+    grid_start_x = None
+    grid_start_y = None
+
+
 class Dnode:
     goal = None
     vgoal = None
@@ -181,14 +187,22 @@ class Pnode:
             current_node = frontier.get_nowait()
             if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
+                    Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
+                Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                 for child in current_node.children():
                     index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
                     if child.value not in visited and index == -1:
                         frontier.put(child)
+                        # Visualizer.visual_grid[Pnode.level - 1][child.value[0]][child.value[1]].make_open()
                     elif index != -1 and frontier.queue[index].cost() > child.cost():
                         frontier.queue[index] = child
+
+            pygame.time.delay(100)
+            draw_menu_level3(Pnode.level - 1)
+            draw(WIN, Visualizer.visual_grid[Pnode.level - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
+
         return None
 
 
@@ -204,15 +218,20 @@ def find_dtree(map_data):
         current_node = frontier.get_nowait()
         if (current_node.name, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
+                # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
                 return current_node.reconstruct_path()
             visited.add((current_node.name, tuple(current_node.keys)))
+            # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
             for child in current_node.children():
                 index = next((i for i, e in enumerate(frontier.queue) if e.name == child.name and e.keys == child.keys),
                              -1)
                 if (child.name, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
+                    # Visualizer.visual_grid[child.value[2] - 1][child.value[0]][child.value[1]].make_start()
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
                     frontier.queue[index] = child
+        # draw_menu_level3(current_node.value[2] - 1)
+        # draw(WIN, Visualizer.visual_grid[current_node.value[2] - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
     return None
 
 
@@ -267,6 +286,10 @@ def level3(file):
     map_data = read_file(file)
     Boundary.N = map_data[f'floor{1}']['height']  # Row
     Boundary.M = map_data[f'floor{1}']['width']  # Column
+
+    #  Start and End node
+    start_node = map_data['atkds']['A1']
+    end_node = map_data['atkds']['T1']
     # Calculate the total grid size
     total_grid_width = Boundary.M * (WIDTH // Boundary.M)
     total_grid_height = Boundary.N * (WIDTH // Boundary.N)
@@ -275,8 +298,13 @@ def level3(file):
     grid_start_x = (WIDTH - total_grid_width) // 2
     grid_start_y = (WIDTH - total_grid_height) // 2
 
+    Visualizer.grid_start_x = grid_start_x
+    Visualizer.grid_start_y = grid_start_y
+
     # Create the visualizer
     visual_map = print_visual_grid(map_data)
+
+    Visualizer.visual_grid = visual_map
 
     run = True
     playagain = False
@@ -285,8 +313,13 @@ def level3(file):
     while run:
         # Draw the visualizer
         command = draw_menu_level3(floor_index)
+        if playagain:
+            playagain = False
+            Visualizer.visual_grid = print_visual_grid(map_data)
+
         draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
         pygame.display.update()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -295,6 +328,13 @@ def level3(file):
             if pygame.MOUSEBUTTONDOWN:
                 if command == 1:
                     playagain = True
+                    DTREE = find_dtree(map_data)
+                    for NODE in DTREE:
+                        print(NODE.name)
+                    print()
+                    print(find_path(map_data, DTREE))
+                    visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
+                    visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
 
                 if command == 2:
                     playagain = False
@@ -314,7 +354,6 @@ def level3(file):
                 if command == 0:
                     playagain = False
                     run = False
-
 
         pygame.display.flip()
 

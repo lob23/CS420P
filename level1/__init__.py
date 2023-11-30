@@ -90,6 +90,8 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
 
         # Update the spot's color to represent it has been explored
         visual_grid[node.position[0]][node.position[1]].make_closed()
+        pygame.time.delay(100)
+
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
         counter += 1
     return None
@@ -129,7 +131,10 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
 
         counter += 1
         visual_grid[node.position[0]][node.position[1]].make_closed()
+        pygame.time.delay(100)
+
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
+
     return None
 
 
@@ -156,6 +161,8 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
                 neighbor.spot.make_open()
                 frontier_set.add(tuple(neighbor.position))
         counter += 1
+        pygame.time.delay(100)
+
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
     return None
@@ -191,6 +198,7 @@ def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
                         neighbor.spot.make_open()
 
         counter += 1
+        pygame.time.delay(100)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
@@ -204,11 +212,11 @@ def print_path(node):
     node.spot.make_end()
     node = node.parent
     while node.parent is not None:
-
         node.spot.make_path()
         node = node.parent
     node.spot.make_start()
     return
+
 def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
     visual_grid = make_grid(ROWS, COLUMN, WIDTH)
     # grid = file['floor1']['floor_data']
@@ -245,6 +253,7 @@ def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
 def level1():
     # Example usage
     file = read_file('./level1/input.txt')
+    print(file)
     ROWS = file['floor1']['height']
     COLUMN = file['floor1']['width']
     x,y,z = file['atkds']['A1']

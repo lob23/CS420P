@@ -1,7 +1,6 @@
 # Desc: UI utilities
 import pygame
 
-
 WIDTH = 600
 WIN = pygame.display.set_mode((WIDTH + 300, WIDTH))
 pygame.display.set_caption("Path Finding")
@@ -30,11 +29,8 @@ LIME = (0, 255, 0)
 CORAL = (255, 127, 80)
 INDIGO = (75, 0, 130)
 
-
-
 pygame.font.init()
 font = pygame.font.SysFont('freesansbold', 24)
-
 
 
 class Spot:
@@ -42,6 +38,7 @@ class Spot:
         self.name = None
         self.row = row
         self.col = col
+        self.num_visited = 0
         self.x = col * width
         self.y = row * width
         self.color = WHITE
@@ -83,6 +80,10 @@ class Spot:
     def make_barrier(self):
         self.color = BLACK
 
+    def make_visited(self):
+        self.num_visited += 1
+        self.color = self.get_heatmap_color(self.num_visited / 10)
+
     def make_end(self):
         self.color = TURQUOISE
 
@@ -101,12 +102,23 @@ class Spot:
         self.color = SILVER
         self.name = stair
 
+    def get_heatmap_color(self, normalized_value_0_to_1):
+        color1 = (255, 243, 59)  # Start color
+        color2 = (233, 62, 58)  # End color
+
+        # Interpolate between the two colors based on the normalized value
+        r = int(color1[0] * (1 - normalized_value_0_to_1) + color2[0] * normalized_value_0_to_1)
+        g = int(color1[1] * (1 - normalized_value_0_to_1) + color2[1] * normalized_value_0_to_1)
+        b = int(color1[2] * (1 - normalized_value_0_to_1) + color2[2] * normalized_value_0_to_1)
+
+        return r, g, b
+
     def draw(self, win, grid_start_x, grid_start_y):
-        pygame.draw.rect(win, self.color, ( self.x + grid_start_x, self.y + grid_start_y, self.width, self.width))
+        pygame.draw.rect(win, self.color, (self.x + grid_start_x, self.y + grid_start_y, self.width, self.width))
 
         if self.name is not None:
             text = font.render(self.name, True, 'black')
-        #     the text align center
+            #     the text align center
             WIN.blit(text, (self.x + grid_start_x + 5, self.y + grid_start_y + 5))
 
     def update_neighbors(self, grid):
@@ -125,6 +137,7 @@ class Spot:
 
         def __lt__(self, other):
             return False
+
 
 class Button:
     def __init__(self, txt, pos):
@@ -186,6 +199,7 @@ def draw(win, grid, rows, column, width, grid_start_x, grid_start_y):
     # if not menu:
     pygame.display.update()
 
+
 def draw_menu():
     WIN.fill('white')
     command = -1
@@ -194,7 +208,6 @@ def draw_menu():
     pygame.draw.rect(WIN, 'white', [120, 120, 260, 40], 0, 5)
     pygame.draw.rect(WIN, 'gray', [120, 120, 260, 40], 5, 5)
     txt = font.render('Menus!', True, 'black')
-
 
     WIN.blit(txt, (135, 127))
     # menu exit button
@@ -216,6 +229,7 @@ def draw_menu():
         command = 3
 
     return command
+
 
 def draw_menu_level1():
     command = -1
@@ -249,7 +263,8 @@ def draw_menu_level1():
 
     return command
 
-def draw_menu_level3(floor = 0):
+
+def draw_menu_level3(floor=0):
     WIN.fill('white')
     command = -1
     exitButton = Button('Exit Menu', (620, 420))
