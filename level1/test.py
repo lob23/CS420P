@@ -1,134 +1,62 @@
-# Python program to create a basic settings menu using the pygame_menu module 
+import heapq
 
-import pygame 
-import pygame_menu as pm 
-#  pip install pygame_menu
-pygame.init() 
+def manhattan_distance(pos1, pos2):
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
-# Screen 
-WIDTH, HEIGHT = 700, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT)) 
+def get_neighbors(grid, position, keys):
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Up, Down, Right, Left
+    neighbors = []
+    for dx, dy in directions:
+        x, y = position[0] + dx, position[1] + dy
+        if 0 <= x < len(grid) and 0 <= y < len(grid[0]):
+            cell = grid[x][y]
+            if cell == '-' or (cell.startswith('D') and cell[1:] not in keys):
+                continue  # Wall or locked door
+            neighbors.append((x, y))
+    return neighbors
 
-# Standard RGB colors 
-RED = (255, 0, 0) 
-GREEN = (0, 255, 0) 
-BLUE = (0, 0, 255) 
-CYAN = (0, 100, 100) 
-BLACK = (0, 0, 0) 
-WHITE = (255, 255, 255) 
+def a_star_search(grid, start, goal, doors_keys):
+    # Priority queue: (cost, position, keys_collected)
+    pq = [(0, start, frozenset())]
+    visited = set()
 
-# Main function of the program 
+    while pq:
+        cost, position, keys = heapq.heappop(pq)
 
+        if position == goal:
+            return cost  # Reached the goal
 
-def main(): 
-	# List that is displayed while selecting the graphics level 
-	graphics = [("Low", "low"), 
-				("Medium", "medium"), 
-				("High", "high"), 
-				("Ultra High", "ultra high")] 
+        if (position, keys) in visited:
+            continue
 
-	# List that is displayed while selecting the window resolution level 
-	resolution = [("1920x1080", "1920x1080"), 
-				("1920x1200", "1920x1200"), 
-				("1280x720", "1280x720"), 
-				("2560x1440", "2560x1440"), 
-				("3840x2160", "3840x2160")] 
+        visited.add((position, keys))
 
-	# List that is displayed while selecting the difficulty 
-	difficulty = [("Easy", "Easy"), 
-				("Medium", "Medium"), 
-				("Expert", "Expert")] 
+        for neighbor in get_neighbors(grid, position, keys):
+            new_cost = cost + 1  # Add the cost for moving to the neighbor
+            new_keys = keys
 
-	# List that is displayed while selecting the player's perspective 
-	perspectives = [("FPP", "fpp"), 
-					("TPP", "tpp")] 
+            # Collect key if present
+            if grid[neighbor[0]][neighbor[1]].startswith('K'):
+                new_keys = keys | {grid[neighbor[0]][neighbor[1]][1:]}
 
-	# This function displays the currently selected options 
+            # Add neighbor to the queue with updated cost and keys
+            heapq.heappush(pq, (new_cost + manhattan_distance(neighbor, goal), neighbor, new_keys))
 
-	def printSettings(): 
-		print("\n\n") 
-		# getting the data using "get_input_data" method of the Menu class 
-		settingsData = settings.get_input_data() 
+    return -1  # No path found
 
-		for key in settingsData.keys(): 
-			print(f"{key}\t:\t{settingsData[key]}") 
+# Example Grid
+grid = [
+    ["0", "0", "D1", "0", "K1"],
+    ["-", "0", "-", "0", "0"],
+    ["0", "K1", "-", "0", "T1"]
+]
 
-	# Creating the settings menu 
-	settings = pm.Menu(title="Settings", 
-					width=WIDTH, 
-					height=HEIGHT, 
-					theme=pm.themes.THEME_GREEN) 
+start = (0, 0)  # Starting position of the agent
+goal = (2, 4)  # Mr. Thanh's position (T1)
 
-	# Adjusting the default values 
-	settings._theme.widget_font_size = 25
-	settings._theme.widget_font_color = BLACK 
-	settings._theme.widget_alignment = pm.locals.ALIGN_LEFT 
+# Mapping of doors to keys (assuming keys and doors are uniquely paired)
+doors_keys = {'D1': 'K1'}
 
-	# Text input that takes in the username 
-	settings.add.text_input(title="User Name : ", textinput_id="username") 
-
-	# 2 different Drop-downs to select the graphics level and the resolution level 
-	settings.add.dropselect(title="Graphics Level", items=graphics, 
-							dropselect_id="graphics level", default=0) 
-	settings.add.dropselect_multiple(title="Window Resolution", items=resolution, 
-									dropselect_multiple_id="Resolution", 
-									open_middle=True, max_selected=1, 
-									selection_box_height=6) 
-
-	# Toggle switches to turn on/off the music and sound 
-	settings.add.toggle_switch( 
-		title="Muisc", default=True, toggleswitch_id="music") 
-	settings.add.toggle_switch( 
-		title="Sounds", default=False, toggleswitch_id="sound") 
-
-	# Selector to choose between the types of difficulties available 
-	settings.add.selector(title="Difficulty\t", items=difficulty, 
-						selector_id="difficulty", default=0) 
-
-	# Range slider that lets to choose a value using a slider 
-	settings.add.range_slider(title="FOV", default=60, range_values=( 
-		50, 100), increment=1, value_format=lambda x: str(int(x)), rangeslider_id="fov") 
-
-	# Fancy selector (style added to the default selector) to choose between 
-	#first person and third person perspectives 
-	settings.add.selector(title="Perspective", items=perspectives, 
-						default=0, style="fancy", selector_id="perspective") 
-
-	# clock that displays the current date and time 
-	settings.add.clock(clock_format="%d-%m-%y %H:%M:%S", 
-					title_format="Local Time : {0}") 
-
-	# 3 different buttons each with a different style and purpose 
-	settings.add.button(title="Print Settings", action=printSettings, 
-						font_color=WHITE, background_color=GREEN) 
-	settings.add.button(title="Restore Defaults", action=settings.reset_value, 
-						font_color=WHITE, background_color=RED) 
-	settings.add.button(title="Return To Main Menu", 
-						action=pm.events.BACK, align=pm.locals.ALIGN_CENTER) 
-
-	# Creating the main menu 
-	mainMenu = pm.Menu(title="Main Menu", 
-					width=WIDTH, 
-					height=HEIGHT, 
-					theme=pm.themes.THEME_GREEN) 
-
-	# Adjusting the default values 
-	mainMenu._theme.widget_alignment = pm.locals.ALIGN_CENTER 
-
-	# Button that takes to the settings menu when clicked 
-	mainMenu.add.button(title="Settings", action=settings, 
-						font_color=WHITE, background_color=GREEN) 
-
-	# An empty label that is used to add a seperation between the two buttons 
-	mainMenu.add.label(title="") 
-
-	# Exit button that is used to terminate the program 
-	mainMenu.add.button(title="Exit", action=pm.events.EXIT, 
-						font_color=WHITE, background_color=RED) 
-
-	# Lets us loop the main menu on the screen 
-	mainMenu.mainloop(screen) 
-
-
-if __name__ == "__main__": 
-	main() 
+# Perform A* search
+path_cost = a_star_search(grid, start, goal, doors_keys)
+print(f"Path cost to reach the goal: {path_cost}")

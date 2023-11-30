@@ -7,6 +7,7 @@ WIN = pygame.display.set_mode((WIDTH + 300, WIDTH))
 pygame.display.set_caption("Path Finding")
 FPS = 60
 
+# Colors
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 255, 0)
@@ -17,6 +18,19 @@ PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
+# Additional Colors
+PINK = (255, 105, 180)
+GOLD = (255, 223, 0)
+SILVER = (192, 192, 192)
+BROWN = (165, 42, 42)
+TEAL = (0, 128, 128)
+NAVY = (0, 0, 128)
+MAROON = (128, 0, 0)
+LIME = (0, 255, 0)
+CORAL = (255, 127, 80)
+INDIGO = (75, 0, 130)
+
+
 
 pygame.font.init()
 font = pygame.font.SysFont('freesansbold', 24)
@@ -25,6 +39,7 @@ font = pygame.font.SysFont('freesansbold', 24)
 
 class Spot:
     def __init__(self, row, col, width, total_rows, total_columns):
+        self.name = None
         self.row = row
         self.col = col
         self.x = col * width
@@ -74,8 +89,25 @@ class Spot:
     def make_path(self):
         self.color = PURPLE
 
+    def make_key(self, key):
+        self.color = PINK
+        self.name = key
+
+    def make_door(self, door):
+        self.color = CORAL
+        self.name = door
+
+    def make_stair(self, stair):
+        self.color = SILVER
+        self.name = stair
+
     def draw(self, win, grid_start_x, grid_start_y):
         pygame.draw.rect(win, self.color, ( self.x + grid_start_x, self.y + grid_start_y, self.width, self.width))
+
+        if self.name is not None:
+            text = font.render(self.name, True, 'black')
+        #     the text align center
+            WIN.blit(text, (self.x + grid_start_x + 5, self.y + grid_start_y + 5))
 
     def update_neighbors(self, grid):
         self.neighbors = []
@@ -157,23 +189,25 @@ def draw(win, grid, rows, column, width, grid_start_x, grid_start_y):
 def draw_menu():
     WIN.fill('white')
     command = -1
-    pygame.draw.rect(WIN, 'black', [100, 100, 300, 300])
-    pygame.draw.rect(WIN, 'green', [100, 100, 300, 300], 5)
+    pygame.draw.rect(WIN, 'black', [100, 100, 300, 320])
+    pygame.draw.rect(WIN, 'green', [100, 100, 300, 320], 5)
     pygame.draw.rect(WIN, 'white', [120, 120, 260, 40], 0, 5)
     pygame.draw.rect(WIN, 'gray', [120, 120, 260, 40], 5, 5)
     txt = font.render('Menus!', True, 'black')
+
+
     WIN.blit(txt, (135, 127))
     # menu exit button
-    menu = Button('Exit Menu', (120, 350))
-    menu.draw()
     button1 = Button('Level 1', (120, 180))
     button1.draw()
     button2 = Button('Level 2', (120, 240))
     button2.draw()
     button3 = Button('Level 3', (120, 300))
     button3.draw()
-    if menu.check_clicked():
-        command = 0
+    button4 = Button('Level 4', (120, 360))
+    button4.draw()
+    if button4.check_clicked():
+        command = 4
     if button1.check_clicked():
         command = 1
     if button2.check_clicked():
@@ -214,6 +248,36 @@ def draw_menu_level1():
         command = 4
 
     return command
+
+def draw_menu_level3(floor = 0):
+    WIN.fill('white')
+    command = -1
+    exitButton = Button('Exit Menu', (620, 420))
+    exitButton.draw()
+    txt = font.render(f'Current Floor {floor}', True, 'black')
+    WIN.blit(txt, (620, 127))
+    button1 = Button('A star search', (620, 180))
+    button1.draw()
+    # Go up floor
+    button2 = Button('Go up floor', (620, 240))
+    button2.draw()
+    # Go down floor
+    button3 = Button('Go down floor', (620, 300))
+    button3.draw()
+
+    if exitButton.check_clicked():
+        command = 0
+    if button1.check_clicked():
+        command = 1
+    if button2.check_clicked():
+        command = 2
+    if button3.check_clicked():
+        command = 3
+    # if button4.check_clicked():
+    #     command = 4
+
+    return command
+
 
 def draw_game():
     menu_btn = Button('Main Menu', (100, 100))

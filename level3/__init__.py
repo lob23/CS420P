@@ -1,7 +1,11 @@
 import math
 import re
 from queue import Queue, PriorityQueue
+
+import pygame
+
 from utils.read_file import read_file
+from utils.ui import *
 
 
 def octile_distance(source, target):
@@ -234,14 +238,92 @@ def find_path(map_data, dtree):
     return path
 
 
+def print_visual_grid(map_data):
+    visual_map = []
+    for floor, floor_data in map_data.items():
+        if floor.startswith("floor"):
+            visual_map.append(make_grid(Boundary.N, Boundary.M, WIDTH))
+            for i in range(Boundary.N):
+                for j in range(Boundary.M):
+                    if floor_data['floor_data'][i][j] == "-1":
+                        visual_map[-1][i][j].make_barrier()
+                    elif floor_data['floor_data'][i][j].startswith("T"):
+                        visual_map[-1][i][j].make_end()
+                    elif floor_data['floor_data'][i][j].startswith("A"):
+                        visual_map[-1][i][j].make_start()
+                    elif floor_data['floor_data'][i][j].startswith("K"):
+                        visual_map[-1][i][j].make_key(floor_data['floor_data'][i][j])
+                    elif re.search(r'^D(\d+)$', floor_data['floor_data'][i][j]) is not None:
+                        visual_map[-1][i][j].make_door(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j] == "DO":
+                        visual_map[-1][i][j].make_door("DO")
+                    elif floor_data['floor_data'][i][j] == "UP":
+                        visual_map[-1][i][j].make_door("UP")
+
+    return visual_map
+
+
 def level3(file):
     map_data = read_file(file)
-    Boundary.N = map_data[f'floor{1}']['height']
-    Boundary.M = map_data[f'floor{1}']['width']
-    dtree = find_dtree(map_data)
-    return find_path(map_data, dtree)
+    Boundary.N = map_data[f'floor{1}']['height']  # Row
+    Boundary.M = map_data[f'floor{1}']['width']  # Column
+    # Calculate the total grid size
+    total_grid_width = Boundary.M * (WIDTH // Boundary.M)
+    total_grid_height = Boundary.N * (WIDTH // Boundary.N)
 
-# MAP_DATA = read_file('./level3/test.txt')
+    # Calculate the starting position to center the grid
+    grid_start_x = (WIDTH - total_grid_width) // 2
+    grid_start_y = (WIDTH - total_grid_height) // 2
+
+    # Create the visualizer
+    visual_map = print_visual_grid(map_data)
+
+    run = True
+    playagain = False
+    floor_index = 0
+    total_floor = len(visual_map)
+    while run:
+        # Draw the visualizer
+        command = draw_menu_level3(floor_index)
+        draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                playagain = False
+                pygame.quit()
+            if pygame.MOUSEBUTTONDOWN:
+                if command == 1:
+                    playagain = True
+
+                if command == 2:
+                    playagain = False
+                    if floor_index < total_floor - 1:
+                        floor_index += 1
+                    else:
+                        floor_index = 0
+                    command = -1
+
+                if command == 3:
+                    playagain = False
+                    if floor_index > 0:
+                        floor_index -= 1
+                    else:
+                        floor_index = total_floor - 1
+
+                if command == 0:
+                    playagain = False
+                    run = False
+
+
+        pygame.display.flip()
+
+    #
+    # dtree = find_dtree(map_data)
+    # return find_path(map_data, dtree)
+
+#
+# MAP_DATA = read_file('./test.txt')
 # Boundary.N = MAP_DATA[f'floor{1}']['height']
 # Boundary.M = MAP_DATA[f'floor{1}']['width']
 # DTREE = find_dtree(MAP_DATA)
