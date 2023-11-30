@@ -1,5 +1,6 @@
 import math
 import re
+import timeit
 from queue import Queue, PriorityQueue
 
 import pygame
@@ -78,14 +79,14 @@ class Dnode:
             if (x, y) not in visited:
                 visited.add((x, y))
                 if grid[x][y].startswith("T"):
-                    return [Dnode(grid[x][y], (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z)))]
+                    return [Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z)))]
                 if (x, y) != (self.value[0], self.value[1]):
                     if grid[x][y] == "DO" or grid[x][y] == "UP":
-                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
                     elif grid[x][y].startswith("K"):
-                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
                     elif re.search(r'^D(\d+)$', grid[x][y]) is not None:
-                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + chebyshev_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
                         continue
                 if x > 0 and Dnode.is_reachable(grid[x - 1][y]):
                     queue.put((x - 1, y))
@@ -241,11 +242,11 @@ def simple_visualizer(map_data, path):
     for i in range(len(grid)):
         for j in range(len(grid[0])):
             if grid[i][j] == "-1":
-                print("X", end=" ")
+                print("-1", end=" ")
             elif (i, j, path[0][2]) in path:
-                print("O", end=" ")
+                print(" X", end=" ")
             else:
-                print(" ", end=" ")
+                print(grid[i][j], end=" ")
         print()
 
 
@@ -370,9 +371,15 @@ def test():
     map_data = read_file('./level3/test.txt')
     Boundary.N = map_data[f'floor{1}']['height']
     Boundary.M = map_data[f'floor{1}']['width']
+    start = timeit.default_timer()
     dtree = find_dtree(map_data)
     for e in dtree:
         print(e, end=" ")
     print()
     path = find_path(map_data, dtree)
     print(path)
+    print(len(path) - 1)
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
+
+
