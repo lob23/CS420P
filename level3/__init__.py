@@ -1,3 +1,4 @@
+import heapq
 import math
 import re
 import timeit
@@ -50,11 +51,11 @@ class Dnode:
     def __str__(self):
         return self.name
 
+    def cost(self):
+        return self.g
+
     def h(self):
         return chebyshev_distance(self.value, Dnode.vgoal)
-
-    def cost(self):
-        return self.h() + self.g
 
     @staticmethod
     def is_reachable(cell):
@@ -73,37 +74,38 @@ class Dnode:
         else:
             z = self.value[2]
         grid = Dnode.map_data[f"floor{z}"]["floor_data"]
-        queue.put((self.value[0], self.value[1]))
+        queue.put((self.value[0], self.value[1], 0))
         while not queue.empty():
-            x, y = queue.get()
+            x, y, c = queue.get()
             if (x, y) not in visited:
                 visited.add((x, y))
                 if grid[x][y].startswith("T"):
-                    return [Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z)))]
+                    children.append(Dnode(grid[x][y], (x, y, z), self,  self.g + c))
+                    continue
                 if (x, y) != (self.value[0], self.value[1]):
                     if grid[x][y] == "DO" or grid[x][y] == "UP":
-                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self, self.g + c))
                     elif grid[x][y].startswith("K"):
-                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + c))
                     elif re.search(r'^D(\d+)$', grid[x][y]) is not None:
-                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + c))
                         continue
                 if x > 0 and Dnode.is_reachable(grid[x - 1][y]):
-                    queue.put((x - 1, y))
+                    queue.put((x - 1, y, c + 1))
                 if x < Boundary.N - 1 and Dnode.is_reachable(grid[x + 1][y]):
-                    queue.put((x + 1, y))
+                    queue.put((x + 1, y, c + 1))
                 if y > 0 and Dnode.is_reachable(grid[x][y - 1]):
-                    queue.put((x, y - 1))
+                    queue.put((x, y - 1, c + 1))
                 if y < Boundary.M - 1 and Dnode.is_reachable(grid[x][y + 1]):
-                    queue.put((x, y + 1))
+                    queue.put((x, y + 1, c + 1))
                 if (x, y + 1) in visited and (x + 1, y) in visited and Dnode.is_reachable(grid[x + 1][y + 1]):
-                    queue.put((x + 1, y + 1))
+                    queue.put((x + 1, y + 1, c + 1))
                 if (x + 1, y) in visited and (x, y - 1) in visited and Dnode.is_reachable(grid[x + 1][y - 1]):
-                    queue.put((x + 1, y - 1))
+                    queue.put((x + 1, y - 1, c + 1))
                 if (x, y - 1) in visited and (x - 1, y) in visited and Dnode.is_reachable(grid[x - 1][y - 1]):
-                    queue.put((x - 1, y - 1))
+                    queue.put((x - 1, y - 1, c + 1))
                 if (x - 1, y) in visited and (x, y + 1) in visited and Dnode.is_reachable(grid[x - 1][y + 1]):
-                    queue.put((x - 1, y + 1))
+                    queue.put((x - 1, y + 1, c + 1))
         return children
 
     def reconstruct_path(self):
@@ -189,7 +191,7 @@ class Pnode:
         frontier.put(Pnode((start.value[0], start.value[1])))
         visited = set()
         while not frontier.empty():
-            current_node = frontier.get_nowait()
+            current_node = frontier.get()
             if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
                     Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
@@ -203,6 +205,7 @@ class Pnode:
                         # Visualizer.visual_grid[Pnode.level - 1][child.value[0]][child.value[1]].make_open()
                     elif index != -1 and frontier.queue[index].cost() > child.cost():
                         frontier.queue[index] = child
+                        heapq.heapify(frontier.queue)
 
             pygame.time.delay(100)
             draw_menu_level3(Pnode.level - 1)
@@ -222,11 +225,13 @@ def find_dtree(map_data):
     while not frontier.empty():
         current_node = frontier.get_nowait()
         if (current_node.value, tuple(current_node.keys)) not in visited:
+            print("p", current_node.name, current_node.cost())
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
                 return current_node.reconstruct_path()
             visited.add((current_node.value, tuple(current_node.keys)))
             for child in current_node.children():
+                print(child.name, child.cost(), child.keys)
                 index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value and e.keys == child.keys),
                              -1)
                 if (child.value, tuple(child.keys)) not in visited and index == -1:
@@ -234,6 +239,7 @@ def find_dtree(map_data):
                     # Visualizer.visual_grid[child.value[2] - 1][child.value[0]][child.value[1]].make_start()
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
                     frontier.queue[index] = child
+                    heapq.heapify(frontier.queue)
     return None
 
 
