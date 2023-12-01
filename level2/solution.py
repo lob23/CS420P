@@ -6,6 +6,45 @@ import copy
 from collections import deque
 import os.path
 import timeit
+from utils.ui import *
+
+
+class Visualizer:
+    visual_map = None
+    grid_start_x = None
+    grid_start_y = None
+    rows = None
+    columns = None
+
+    @staticmethod
+    def print_visual_grid(grid):
+        visual_grid = make_grid(Visualizer.rows, Visualizer.columns, WIDTH)
+        for i in range((Visualizer.rows)):
+            for j in range((Visualizer.columns)):
+                if grid[i][j] == '-1':
+                    visual_grid[i][j].make_barrier()
+                elif grid[i][j].startswith('T'):
+                    visual_grid[i][j].make_end()
+                elif grid[i][j].startswith('D'):
+                    visual_grid[i][j].make_door(grid[i][j])
+                elif grid[i][j].startswith('K'):
+                    visual_grid[i][j].make_key(grid[i][j])
+                elif grid[i][j].startswith('A'):
+                    visual_grid[i][j].make_start()
+
+        return visual_grid
+
+    @staticmethod
+    def print_path(path):
+        Visualizer.visual_map[path[0][0]][path[0][1]].make_start()
+        for i in range(1, len(path)):
+            Visualizer.visual_map[path[i][0]][path[i][1]].make_visited()
+            pygame.time.wait(100)
+            draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
+                 Visualizer.grid_start_y)
+            pygame.display.update()
+            # print(path[i][0], path[i][1])
+        # Visualizer.visual_map[path[-1][0]][path[-1][1]].make_end()
 
 
 class game:
@@ -274,7 +313,7 @@ class game:
 
         frontier.put((self.heuristic(self.agent, self.goal), ([self.agent], 0)))
         i = 0
-
+        pygame.time.wait(1000)
         while (frontier.not_empty):
             try:
                 cur_cost, (cur_node, cost) = frontier.get_nowait()
@@ -290,6 +329,7 @@ class game:
                 continue
 
             adjacentNodes = path_list[tuple(cur_node[-1])]
+            Visualizer.visual_map[cur_node[-1][0]][cur_node[-1][1]].make_visited_key_door()
 
             for node in adjacentNodes:
 
@@ -302,9 +342,12 @@ class game:
                 temp = copy.deepcopy(cur_node)
                 temp.append(node[0])
                 frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal)), (temp, cost + node[1])))
+            draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
+                 Visualizer.grid_start_y)
+            pygame.display.update()
 
         return None
-    
+
     def GBFS(self, path_list):
         frontier = PriorityQueue()
 
@@ -337,11 +380,10 @@ class game:
 
                 temp = copy.deepcopy(cur_node)
                 temp.append(node[0])
-                frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal)*100), (temp, cost + node[1])))
+                frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal) * 100), (temp, cost + node[1])))
 
         return None
-    
-    
+
     def UCS(self, path_list):
         frontier = PriorityQueue()
 
@@ -420,6 +462,8 @@ class game:
             print("UnSolvable")
             return None
         print(finalRoutine)
+        # Print final routine to the screen
+        Visualizer.print_path(finalRoutine)
         return finalRoutine
 
     def getRoutine(self, routine, path):
@@ -617,16 +661,74 @@ def convertFileToGrid(filename):
         return gameMap
 
 
-gameMap = convertFileToGrid("./level2/input.txt")
-test = game(gameMap=gameMap)
+def main():
+    gameMap = convertFileToGrid("./level2/input.txt")
+    print(gameMap)
+    test = game(gameMap=gameMap)
 
-start = timeit.default_timer()
+    start = timeit.default_timer()
 
-print(len(test.algorithm()))
+    print(len(test.algorithm()))
 
-stop = timeit.default_timer()
+    stop = timeit.default_timer()
 
-print('Time: ', stop - start)
+    print('Time: ', stop - start)
+
+
+def level2(url):
+    gameMap = convertFileToGrid(url)
+    Visualizer.rows = len(gameMap)
+    Visualizer.columns = len(gameMap[0])
+
+    # Calculate the total grid size
+    total_grid_width = Visualizer.columns * WIDTH
+    total_grid_height = Visualizer.rows * WIDTH
+
+    # Calculate the starting position to center the grid
+    Visualizer.grid_start_x = (WIDTH * Visualizer.columns - total_grid_width) // 2
+    Visualizer.grid_start_y = (WIDTH * Visualizer.rows - total_grid_height) // 2
+
+    visual_map = Visualizer.print_visual_grid(gameMap)
+    Visualizer.visual_map = visual_map
+
+    draw(WIN, visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
+
+    pygame.display.update()
+    # Initialize the pygame module
+    run = True
+    playagain = False
+    command = -1
+    while run:
+        command = draw_menu_level2()
+
+        # redraw the screen when play again
+        if playagain:
+            playagain = False
+            Visualizer.visual_map = Visualizer.print_visual_grid(gameMap)
+
+        draw(WIN, visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
+             Visualizer.grid_start_y)
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                return
+            if pygame.MOUSEBUTTONDOWN:
+                if command == 1:
+                    test = game(gameMap=gameMap)
+                    start = timeit.default_timer()
+                    print(len(test.algorithm()))
+                    stop = timeit.default_timer()
+                    print('Time: ', stop - start)
+                    playagain = True
+                elif command == 0:
+                    run = False
+                    return
+
+        pygame.display.flip()
 
 # Astar
 # [(8, 3), (9, 4), (10, 5), (11, 6), (12, 7), (13, 8), (14, 9), (15, 10), (16, 11), (17, 12), (18, 13), (19, 14), (19, 15), (19, 16), (19, 17), (19, 18), (19, 19), (19, 20), (19, 21), (19, 22), (19, 23), (20, 24), (21, 25), (22, 25), (23, 25), (24, 25), (25, 25), (26, 25), (27, 25), (28, 26), (28, 27), (28, 28), (28, 29), (28, 30), (28, 31), (27, 31), (26, 31), (26, 30), (26, 29), (26, 28), (25, 27), (24, 27), (23, 27), (23, 28), (23, 29), (24, 30), (24, 31)]#

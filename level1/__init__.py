@@ -90,7 +90,7 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
 
         # Update the spot's color to represent it has been explored
         visual_grid[node.position[0]][node.position[1]].make_closed()
-        pygame.time.delay(100)
+        pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
         counter += 1
@@ -131,7 +131,7 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
 
         counter += 1
         visual_grid[node.position[0]][node.position[1]].make_closed()
-        pygame.time.delay(100)
+        pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
@@ -161,7 +161,7 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
                 neighbor.spot.make_open()
                 frontier_set.add(tuple(neighbor.position))
         counter += 1
-        pygame.time.delay(100)
+        pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
@@ -198,7 +198,7 @@ def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
                         neighbor.spot.make_open()
 
         counter += 1
-        pygame.time.delay(100)
+        pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
@@ -327,6 +327,7 @@ def level1():
                     play_again = True
 
 
+        pygame.time.delay(100)
         pygame.display.update()
 
         # pygame.display.update()
