@@ -1,5 +1,6 @@
 import pygame
 from level1.__init__ import level1
+import level2.solution as level2
 from level3.__init__ import level3
 from utils.ui import *
 
@@ -23,7 +24,8 @@ def main():
                     level1()
                 elif menu_command == 2:
                     print("level 2")
-
+                    level2.level2('level2/input.txt')
+                    # level2.main()
                 elif menu_command == 3:
                     print("level 3")
                     level3('level3/test.txt')

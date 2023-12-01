@@ -23,7 +23,7 @@ class Boundary:
     N = None
     M = None
 
-
+# Visual grid
 class Visualizer:
     visual_grid = None
     grid_start_x = None
@@ -192,6 +192,7 @@ class Pnode:
             current_node = frontier.get_nowait()
             if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
+                    # print the visited node to the screen
                     Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
@@ -205,6 +206,7 @@ class Pnode:
                         frontier.queue[index] = child
 
             pygame.time.delay(100)
+            # redraw the screen
             draw_menu_level3(Pnode.level - 1)
             draw(WIN, Visualizer.visual_grid[Pnode.level - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
 
@@ -328,6 +330,7 @@ def level3(file):
                 playagain = False
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
+                # Run search algorithm
                 if command == 1:
                     playagain = True
                     DTREE = find_dtree(map_data)
@@ -339,7 +342,7 @@ def level3(file):
                         Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
                     visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
                     visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
-
+                # Go up floor
                 if command == 2:
                     playagain = False
                     if floor_index < total_floor - 1:
@@ -347,20 +350,20 @@ def level3(file):
                     else:
                         floor_index = 0
                     command = -1
-
+                # Go down floor
                 if command == 3:
                     playagain = False
                     if floor_index > 0:
                         floor_index -= 1
                     else:
                         floor_index = total_floor - 1
-
+                #  Exit menu
                 if command == 0:
                     playagain = False
                     run = False
 
 
-        pygame.display.flip()
+            pygame.display.flip()
 
     #
     # dtree = find_dtree(map_data)

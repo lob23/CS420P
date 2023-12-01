@@ -29,13 +29,14 @@ LIME = (0, 255, 0)
 CORAL = (255, 127, 80)
 INDIGO = (75, 0, 130)
 
+
 class UI:
     gap = 0
 
+
 pygame.font.init()
 font = pygame.font.SysFont('freesansbold', 24)
-font_scale = pygame.font.SysFont('freesansbold', int(24/66 * UI.gap))
-
+font_scale = pygame.font.SysFont('freesansbold', int(24 / 66 * UI.gap))
 
 
 class Spot:
@@ -88,6 +89,9 @@ class Spot:
     def make_visited(self):
         self.num_visited += 1
         self.color = self.get_heatmap_color(self.num_visited / 7)
+
+    def make_visited_key_door(self):
+        self.color = LIME
 
     def make_end(self):
         self.color = TURQUOISE
@@ -270,6 +274,21 @@ def draw_menu_level1():
     return command
 
 
+def draw_menu_level2():
+    WIN.fill('white')
+    command = -1
+    exitButton = Button('Exit Menu', (620, 420))
+    exitButton.draw()
+    button1 = Button('Search', (620, 180))
+    button1.draw()
+    if exitButton.check_clicked():
+        command = 0
+    if button1.check_clicked():
+        command = 1
+
+    return command
+
+
 def draw_menu_level3(floor=0):
     WIN.fill('white')
     command = -1
@@ -277,7 +296,7 @@ def draw_menu_level3(floor=0):
     exitButton.draw()
     txt = font.render(f'Current Floor {floor}', True, 'black')
     WIN.blit(txt, (620, 127))
-    button1 = Button('A star search', (620, 180))
+    button1 = Button('Search', (620, 180))
     button1.draw()
     # Go up floor
     button2 = Button('Go up floor', (620, 240))
