@@ -33,16 +33,13 @@ class Dnode:
             self.keys.add(self.name[1:])
 
     def __lt__(self, other):
-        return self.cost() < other.cost()
+        return True if other is None else self.cost() < other.cost()
 
     def __str__(self):
         return self.name
 
-    def h(self):
-        return chebyshev_distance(self.value, Dnode.vgoal)
-
     def cost(self):
-        return self.h() + self.g
+        return self.g
 
     @staticmethod
     def is_reachable(cell):
@@ -61,40 +58,38 @@ class Dnode:
         else:
             z = self.value[2]
         grid = Dnode.map_data[f"floor{z}"]["floor_data"]
-        queue.put((self.value[0], self.value[1]))
+        queue.put((self.value[0], self.value[1], 0))
         while not queue.empty():
-            x, y = queue.get()
+            x, y, c = queue.get()
             if (x, y) not in visited:
                 visited.add((x, y))
                 if grid[x][y].startswith("T"):
-                    return [Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z)))]
+                    children.append(Dnode(grid[x][y], (x, y, z), self, self.g + c))
+                    continue
                 if (x, y) != (self.value[0], self.value[1]):
                     if grid[x][y] == "DO" or grid[x][y] == "UP":
-                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self,
-                                              self.g + octile_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y] + str(z), (x, y, z), self, self.g + c))
                     elif grid[x][y].startswith("K"):
-                        children.append(
-                            Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + c))
                     elif re.search(r'^D(\d+)$', grid[x][y]) is not None:
-                        children.append(
-                            Dnode(grid[x][y], (x, y, z), self, self.g + octile_distance(self.value, (x, y, z))))
+                        children.append(Dnode(grid[x][y], (x, y, z), self, self.g + c))
                         continue
                 if x > 0 and Dnode.is_reachable(grid[x - 1][y]):
-                    queue.put((x - 1, y))
+                    queue.put((x - 1, y, c + 1))
                 if x < Boundary.N - 1 and Dnode.is_reachable(grid[x + 1][y]):
-                    queue.put((x + 1, y))
+                    queue.put((x + 1, y, c + 1))
                 if y > 0 and Dnode.is_reachable(grid[x][y - 1]):
-                    queue.put((x, y - 1))
+                    queue.put((x, y - 1, c + 1))
                 if y < Boundary.M - 1 and Dnode.is_reachable(grid[x][y + 1]):
-                    queue.put((x, y + 1))
+                    queue.put((x, y + 1, c + 1))
                 if (x, y + 1) in visited and (x + 1, y) in visited and Dnode.is_reachable(grid[x + 1][y + 1]):
-                    queue.put((x + 1, y + 1))
+                    queue.put((x + 1, y + 1, c + 1))
                 if (x + 1, y) in visited and (x, y - 1) in visited and Dnode.is_reachable(grid[x + 1][y - 1]):
-                    queue.put((x + 1, y - 1))
+                    queue.put((x + 1, y - 1, c + 1))
                 if (x, y - 1) in visited and (x - 1, y) in visited and Dnode.is_reachable(grid[x - 1][y - 1]):
-                    queue.put((x - 1, y - 1))
+                    queue.put((x - 1, y - 1, c + 1))
                 if (x - 1, y) in visited and (x, y + 1) in visited and Dnode.is_reachable(grid[x - 1][y + 1]):
-                    queue.put((x - 1, y + 1))
+                    queue.put((x - 1, y + 1, c + 1))
         return children
 
     def reconstruct_path(self):
@@ -119,7 +114,7 @@ class Pnode:
         self.g = g
 
     def __lt__(self, other):
-        return self.cost() < other.cost()
+        return True if other is None else self.cost() < other.cost()
 
     def h(self):
         return octile_distance(self.value, Pnode.vgoal)
@@ -181,16 +176,17 @@ class Pnode:
         visited = set()
         while not frontier.empty():
             current_node = frontier.get_nowait()
-            if current_node.value not in visited:
+            if current_node is not None and current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
                 for child in current_node.children():
-                    index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
+                    index = next((i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value), -1)
                     if child.value not in visited and index == -1:
                         frontier.put(child)
                     elif index != -1 and frontier.queue[index].cost() > child.cost():
-                        frontier.queue[index] = child
+                        frontier.queue[index] = None
+                        frontier.put(child)
         return None
 
 
@@ -204,18 +200,19 @@ def find_dtree(map_data, agent, task):
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if (current_node.value, tuple(current_node.keys)) not in visited:
+        if current_node is not None and (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 return current_node.reconstruct_path()
             visited.add((current_node.value, tuple(current_node.keys)))
             for child in current_node.children():
                 index = next(
-                    (i for i, e in enumerate(frontier.queue) if e.value == child.value and e.keys == child.keys),
+                    (i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value and e.keys == child.keys),
                     -1)
                 if (child.value, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
-                    frontier.queue[index] = child
+                    frontier.queue[index] = None
+                    frontier.put(child)
     return None
 
 

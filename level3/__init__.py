@@ -46,16 +46,13 @@ class Dnode:
             self.keys.add(self.name[1:])
 
     def __lt__(self, other):
-        return self.cost() < other.cost()
+        return True if other is None else self.cost() < other.cost()
 
     def __str__(self):
         return self.name
 
     def cost(self):
         return self.g
-
-    def h(self):
-        return chebyshev_distance(self.value, Dnode.vgoal)
 
     @staticmethod
     def is_reachable(cell):
@@ -130,7 +127,7 @@ class Pnode:
         self.g = g
 
     def __lt__(self, other):
-        return self.cost() < other.cost()
+        return True if other is None else self.cost() < other.cost()
 
     def h(self):
         return octile_distance(self.value, Pnode.vgoal)
@@ -192,20 +189,20 @@ class Pnode:
         visited = set()
         while not frontier.empty():
             current_node = frontier.get()
-            if current_node.value not in visited:
+            if current_node is not None and current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
                     Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
                 Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                 for child in current_node.children():
-                    index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
+                    index = next((i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value), -1)
                     if child.value not in visited and index == -1:
                         frontier.put(child)
                         # Visualizer.visual_grid[Pnode.level - 1][child.value[0]][child.value[1]].make_open()
                     elif index != -1 and frontier.queue[index].cost() > child.cost():
-                        frontier.queue[index] = child
-                        heapq.heapify(frontier.queue)
+                        frontier.queue[index] = None
+                        frontier.put(child)
 
             pygame.time.delay(100)
             draw_menu_level3(Pnode.level - 1)
@@ -224,22 +221,20 @@ def find_dtree(map_data):
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if (current_node.value, tuple(current_node.keys)) not in visited:
-            print("p", current_node.name, current_node.cost())
+        if current_node is not None and (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
                 return current_node.reconstruct_path()
             visited.add((current_node.value, tuple(current_node.keys)))
             for child in current_node.children():
-                print(child.name, child.cost(), child.keys)
-                index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value and e.keys == child.keys),
+                index = next((i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value and e.keys == child.keys),
                              -1)
                 if (child.value, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
                     # Visualizer.visual_grid[child.value[2] - 1][child.value[0]][child.value[1]].make_start()
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
-                    frontier.queue[index] = child
-                    heapq.heapify(frontier.queue)
+                    frontier.queue[index] = None
+                    frontier.put(child)
     return None
 
 
