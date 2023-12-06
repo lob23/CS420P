@@ -43,8 +43,8 @@ class Visualizer:
             draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
                  Visualizer.grid_start_y)
             pygame.display.update()
-            # print(path[i][0], path[i][1])
-        # Visualizer.visual_map[path[-1][0]][path[-1][1]].make_end()
+            print(path[i][0], path[i][1])
+        Visualizer.visual_map[path[-1][0]][path[-1][1]].make_end()
 
 
 class game:
@@ -124,6 +124,8 @@ class game:
 
         path = []
         routine = {}
+        
+        minimumByDoor = {}
         while (frontier):
 
             node, cost = frontier.popleft()
@@ -134,8 +136,7 @@ class game:
             neighbors = self.get_neighbors(node)
 
             for neighbor in neighbors:
-                if (
-                        neighbor in self.doors or neighbor == self.agent or neighbor in self.keys.values() or neighbor == self.goal):
+                if (neighbor in self.doors or neighbor == self.agent or neighbor in self.keys.values() or neighbor == self.goal):
                     if (neighbor not in distenceDetermined and neighbor != pos):
                         path.append([neighbor, cost + 1])
                         distenceDetermined.add(neighbor)
@@ -146,15 +147,7 @@ class game:
                     frontier.extend([[neighbor, cost + 1]])
                     if ((neighbor, pos) not in routine):
                         routine[(neighbor, pos)] = node
-
         return (path, routine)
-
-    def isRoom(self, agent_pos):  # redundant
-
-        if ("A" in self.gameMap[agent_pos[0]][agent_pos[1]]):
-            return False
-        else:
-            return True
 
     def exploreDoor(self, door_list, door):
 
@@ -180,19 +173,42 @@ class game:
                 frontier.append([d, copy.deepcopy(explored_current)])
                 if (d in self.doors):
                     frontier.append([self.doors[d], copy.deepcopy(explored_current)])
-
+                    
         self.backtrackPrunningImpossibleBranches(door_list, newExplored)
         return door_list
 
-    def backtrackPrunningImpossibleBranches(self, door_list, newExplored):
-        emptyKeys = [d for d, target in door_list.items() if not target]
-
-        for key in emptyKeys:
-            del door_list[key]
-            newExplored.remove(self.doors[key])
-            for d, other in door_list.items():
-                if key in other:
-                    other.remove(key)
+    def backtrackPrunningImpossibleBranches(self, path):
+        frontier = []
+        frontier.append(self.goal)
+        
+        explored = set()
+        needed = set()
+        
+        while (frontier):
+            is_open = False
+            node = frontier.pop(0)
+            
+            if (node in explored): continue
+            explored.add(node)
+            
+            for p,q in path[node]:
+                if(self.agent == p):
+                    is_open = True
+                    
+            if is_open == True:
+                continue
+            for p,q in path[node]:
+                
+                if(tuple(p) in self.doors and p not in needed):
+                    needed.add(p)
+                    if (self.doors[p] and self.doors[p] not in needed):
+                        needed.add(self.doors[p])
+                        frontier.append(self.doors[p])
+        
+        needed.add(self.agent)
+        needed.add(self.goal)
+        return needed
+            
 
     # def generatePath(self, door_list, coordinates, isFirst, found):
 
@@ -299,16 +315,7 @@ class game:
     def heuristic(self, position, target):
         return max(abs(position[0] - target[0]), abs(position[1] - target[1]))
 
-    def getNextTarget(self, path_list, current):
-        target = []
-
-        for x in path_list:
-            i = -1
-            if (x[i] == current):
-                temp = []
-                i -= 1
-
-    def Astar(self, path_list):
+    def Astar(self, path_list, needed):
         frontier = PriorityQueue()
 
         frontier.put((self.heuristic(self.agent, self.goal), ([self.agent], 0)))
@@ -338,14 +345,16 @@ class game:
 
                 if (tuple(node[0]) in list(self.keys.values()) and tuple(node[0]) in cur_node):
                     continue
-
+                
+                if (tuple(node[0]) not in needed):
+                    continue
+                
                 temp = copy.deepcopy(cur_node)
                 temp.append(node[0])
                 frontier.put(((cost + node[1] + self.heuristic(node[0], self.goal)), (temp, cost + node[1])))
             draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
-                 Visualizer.grid_start_y)
+                Visualizer.grid_start_y)
             pygame.display.update()
-
         return None
 
     def GBFS(self, path_list):
@@ -456,7 +465,9 @@ class game:
         if (not path_graph[self.goal]):
             print("UnSolvable")
             return None
-        shortestPath = self.Astar(path_graph)
+        needed = self.backtrackPrunningImpossibleBranches(path_graph)
+        shortestPath = self.Astar(path_graph, needed)
+        # print(shortestPath)
         finalRoutine = self.getRoutine(routine, shortestPath)
         if (not finalRoutine):
             print("UnSolvable")
@@ -663,7 +674,7 @@ def convertFileToGrid(filename):
 
 def main():
     gameMap = convertFileToGrid("./level2/input.txt")
-    print(gameMap)
+    # print(gameMap)
     test = game(gameMap=gameMap)
 
     start = timeit.default_timer()
@@ -674,6 +685,7 @@ def main():
 
     print('Time: ', stop - start)
 
+main()
 
 def level2(url):
     gameMap = convertFileToGrid(url)
