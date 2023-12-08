@@ -41,7 +41,7 @@ def read_file(url):
             current_floor = line.strip('[]')
             current_floor_index += 1
         else:
-            row = line.split(',')
+            row = line.replace(' ', '').split(',')
             count = (i % (height + 1)) - 2
             col = height - 1 if count == -2 else count
             find_agent_and_task(row, col, current_floor_index, atkds)

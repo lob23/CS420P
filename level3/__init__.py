@@ -46,7 +46,7 @@ class Dnode:
             self.keys.add(self.name[1:])
 
     def __lt__(self, other):
-        return True if other is None else self.cost() < other.cost()
+        return self.cost() < other.cost()
 
     def __str__(self):
         return self.name
@@ -127,7 +127,7 @@ class Pnode:
         self.g = g
 
     def __lt__(self, other):
-        return True if other is None else self.cost() < other.cost()
+        return self.cost() < other.cost()
 
     def h(self):
         return octile_distance(self.value, Pnode.vgoal)
@@ -189,7 +189,7 @@ class Pnode:
         visited = set()
         while not frontier.empty():
             current_node = frontier.get()
-            if current_node is not None and current_node.value not in visited:
+            if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
                     # print the visited node to the screen
                     Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
@@ -197,15 +197,15 @@ class Pnode:
                 visited.add(current_node.value)
                 Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                 for child in current_node.children():
-                    index = next((i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value), -1)
+                    index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
                     if child.value not in visited and index == -1:
                         frontier.put(child)
                         # Visualizer.visual_grid[Pnode.level - 1][child.value[0]][child.value[1]].make_open()
                     elif index != -1 and frontier.queue[index].cost() > child.cost():
-                        frontier.queue[index] = None
+                        frontier.queue.pop(index)
                         frontier.put(child)
 
-            pygame.time.delay(100)
+            # pygame.time.delay(100)
             # redraw the screen
             draw_menu_level3(Pnode.level - 1)
             draw(WIN, Visualizer.visual_grid[Pnode.level - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
@@ -223,19 +223,19 @@ def find_dtree(map_data):
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if current_node is not None and (current_node.value, tuple(current_node.keys)) not in visited:
+        if (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
                 return current_node.reconstruct_path()
             visited.add((current_node.value, tuple(current_node.keys)))
             for child in current_node.children():
-                index = next((i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value and e.keys == child.keys),
+                index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value and e.keys == child.keys),
                              -1)
                 if (child.value, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
                     # Visualizer.visual_grid[child.value[2] - 1][child.value[0]][child.value[1]].make_start()
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
-                    frontier.queue[index] = None
+                    frontier.queue.pop(index)
                     frontier.put(child)
     return None
 
@@ -259,6 +259,7 @@ def find_path(map_data, dtree):
     path = Pnode.a_star(map_data, dtree[0], dtree[1])
     for i in range(1, len(dtree) - 1):
         path.extend(Pnode.a_star(map_data, dtree[i], dtree[i + 1])[1:])
+    print(len(path) - 1)
     return path
 
 
@@ -382,7 +383,6 @@ def test():
     print()
     path = find_path(map_data, dtree)
     print(path)
-    print(len(path) - 1)
     stop = timeit.default_timer()
     print('Time: ', stop - start)
 
