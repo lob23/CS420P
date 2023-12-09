@@ -117,6 +117,7 @@ class Dnode:
 
 
 class Pnode:
+    map_data = None
     goal = None
     vgoal = None
     grid = None
@@ -209,7 +210,7 @@ class Pnode:
         return None
 
 
-def find_dtree(map_data, start: str, goal: str, keys=None, debug=False):
+def find_dtree(map_data, start: str, goal: str, keys=None):
     Dnode.map_data = map_data
     Dnode.goal = goal
     Dnode.vgoal = map_data['atkds'][Dnode.goal]
@@ -221,8 +222,6 @@ def find_dtree(map_data, start: str, goal: str, keys=None, debug=False):
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if debug:
-            print(current_node)
         if (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
@@ -267,7 +266,6 @@ class Agent:
             self.keys = dtree[-1].keys
             self.path = find_path(Agent.map_data, dtree)
 
-
     def cell(self):
         return self.path[self.__current][1], self.path[self.__current][2], self.path[self.__current][3]
 
@@ -284,7 +282,8 @@ class Agent:
                         return 0
             if self.start != 'A1' and self.__current == len(self.path) - 1:
                 Agent.map_data['atkds'][self.start] = self.path[self.__current][1:]
-                Agent.map_data[f'floor{self.path[self.__current][3]}']['floor_data'][self.path[self.__current][1]][self.path[self.__current][2]] = self.start
+                Agent.map_data[f'floor{self.path[self.__current][3]}']['floor_data'][self.path[self.__current][1]][
+                    self.path[self.__current][2]] = self.start
                 Agent.map_data[f'floor{self.path[0][3]}']['floor_data'][self.path[0][1]][self.path[0][2]] = '0'
                 while True:
                     x = random.randint(0, Boundary.N - 1)
@@ -294,13 +293,15 @@ class Agent:
                         Agent.map_data['atkds'].update({self.goal: (x, y, z)})
                         Agent.map_data[f'floor{z}']['floor_data'][x][y] = self.goal
                         self.__current = 0
-                        self.path = find_path(Agent.map_data, find_dtree(Agent.map_data, self.start, self.goal, self.keys))
+                        self.path = find_path(Agent.map_data,
+                                              find_dtree(Agent.map_data, self.start, self.goal, self.keys))
                         break
                 return 1
         return 2
 
-    def is_at_goal(self):
-        return self.__current == len(self.path) - 1
+    def get_out_of_the_way(self, cell):
+        self.path.insert(1, (None, cell[0], cell[1], cell[2]))
+        self.path.insert(2, self.path[0])
 
     def __str__(self):
         return self.start + " " + str(self.cell())
@@ -364,6 +365,43 @@ class Anode:
         return path[::-1]
 
 
+def prevent_deadlock(agents):
+    a1_path = set([cell[1:] for cell in agents[0].path])
+    for i in range(1, len(agents)):
+        ai_path = set([cell[1:] for cell in agents[i].path])
+        intersection = a1_path.intersection(ai_path)
+        union = a1_path.union(ai_path)
+        if agents[0].path[0][1:] in intersection and agents[i].path[0][1:] in intersection:
+            x = agents[i].path[0][1]
+            y = agents[i].path[0][2]
+            z = agents[i].path[0][3]
+            grid = Agent.map_data[f'floor{z}']['floor_data']
+            if x > 0 and grid[x - 1][y] == "0" and (x - 1, y, z) not in union:
+                agents[i].get_out_of_the_way((x - 1, y, agents[0].path[0][3]))
+                break
+            if x < Boundary.N - 1 and grid[x + 1][y] == "0" and (x + 1, y, z) not in union:
+                agents[i].get_out_of_the_way((x + 1, y, agents[0].path[0][3]))
+                break
+            if y > 0 and grid[x][y - 1] == "0" and (x, y - 1, z) not in union:
+                agents[i].get_out_of_the_way((x, y - 1, agents[0].path[0][3]))
+                break
+            if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
+                agents[i].get_out_of_the_way((x, y + 1, agents[0].path[0][3]))
+                break
+            if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
+                agents[i].get_out_of_the_way((x - 1, y - 1, agents[0].path[0][3]))
+                break
+            if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
+                agents[i].get_out_of_the_way((x + 1, y - 1, agents[0].path[0][3]))
+                break
+            if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
+                agents[i].get_out_of_the_way((x + 1, y + 1, agents[0].path[0][3]))
+                break
+            if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
+                agents[i].get_out_of_the_way((x - 1, y + 1, agents[0].path[0][3]))
+                break
+
+
 def mapf(map_data):
     Boundary.N = map_data['floor1']['height']
     Boundary.M = map_data['floor1']['width']
@@ -376,6 +414,7 @@ def mapf(map_data):
             agents.append(Agent(agent, 'T' + agent[1:]))
             count += 1
     agents.sort(key=lambda x: x.start)
+    prevent_deadlock(agents)
     Anode.n = count
     Anode.combinations = sorted([bin(i)[2:].zfill(count) for i in range(2 ** count)][1:])
     start = Anode(agents)
@@ -389,7 +428,9 @@ def mapf(map_data):
                 return current_node.reconstruct_path()
             visited.add(tuple([agent.cell() for agent in current_node.agents]))
             for child in current_node.children():
-                index = next((i for i, e in enumerate(frontier.queue) if tuple([agent.cell() for agent in e.agents]) == tuple([agent.cell() for agent in child.agents])), -1)
+                index = next((i for i, e in enumerate(frontier.queue) if
+                              tuple([agent.cell() for agent in e.agents]) == tuple(
+                                  [agent.cell() for agent in child.agents])), -1)
                 if tuple([agent.cell() for agent in child.agents]) not in visited and index == -1:
                     frontier.put(child)
                 elif index != -1 and frontier.queue[index].t > child.t:
