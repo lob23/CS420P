@@ -269,8 +269,8 @@ class Agent:
                 if self.start != agent.start:
                     if self.cell() == agent.cell():
                         self.__current -= 1
-                        return agent.cell()
-        return None
+                        return 0
+        return 2
 
     def is_at_goal(self):
         return self.__current == len(self.path) - 1
@@ -338,7 +338,6 @@ def mapf(map_data):
     agents.sort(key=lambda x: x.start)
     Anode.n = count
     Anode.combinations = sorted([bin(i)[2:].zfill(count) for i in range(2 ** count)][1:])
-    print(Anode.combinations)
     start = Anode(agents)
     frontier = PriorityQueue()
     frontier.put(start)
@@ -362,7 +361,7 @@ def mapf(map_data):
 def game(map_data):
     Boundary.N = map_data['floor1']['height']
     Boundary.M = map_data['floor1']['width']
-    Agent.map_data = map_data
+    Agent.map_data = copy.deepcopy(map_data)
     solution = mapf(map_data)
     for e in solution:
         print(e)

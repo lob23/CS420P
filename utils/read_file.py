@@ -54,6 +54,7 @@ def read_file(url):
             }
             current_floor_data = []
     floor_data['atkds'] = atkds
+    floor_data['floor_count'] = current_floor_index
     return floor_data
 
 # Text read file
