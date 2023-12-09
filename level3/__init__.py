@@ -29,6 +29,7 @@ class Visualizer:
     visual_grid = None
     grid_start_x = None
     grid_start_y = None
+    visited_score = 0
 
 
 class Dnode:
@@ -260,13 +261,16 @@ def find_path(map_data, dtree):
     for i in range(1, len(dtree) - 1):
         path.extend(Pnode.a_star(map_data, dtree[i], dtree[i + 1])[1:])
     print(len(path) - 1)
+    Visualizer.visited_score = len(path) - 1
+    # 100 - visited_score
     return path
 
 
 def print_visual_grid(map_data):
     visual_map = []
     for floor, floor_data in map_data.items():
-        if floor.startswith("floor"):
+        # Check if the data is a floor
+        if re.search(r'^floor\d+$', floor) is not None:
             visual_map.append(make_grid(Boundary.N, Boundary.M, WIDTH))
             for i in range(Boundary.N):
                 for j in range(Boundary.M):
@@ -328,6 +332,8 @@ def level3(file):
             playagain = False
             Visualizer.visual_grid = print_visual_grid(map_data)
 
+        print_score(Visualizer.visited_score)
+
         draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
         pygame.display.update()
 
@@ -339,6 +345,7 @@ def level3(file):
             if pygame.MOUSEBUTTONDOWN:
                 # Run search algorithm
                 if command == 1:
+                    Visualizer.visited_score = 0
                     playagain = True
                     DTREE = find_dtree(map_data)
                     for NODE in DTREE:
@@ -349,6 +356,7 @@ def level3(file):
                         Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
                     visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
                     visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
+
                 # Go up floor
                 if command == 2:
                     playagain = False
@@ -390,5 +398,4 @@ def test():
     print(path)
     stop = timeit.default_timer()
     print('Time: ', stop - start)
-
 
