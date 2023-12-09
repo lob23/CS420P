@@ -2,6 +2,7 @@ import copy
 import math
 import re
 from queue import Queue, PriorityQueue
+import numpy as np
 
 from utils.read_file import read_file
 
@@ -192,7 +193,6 @@ class Pnode:
             if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
                     x = current_node.reconstruct_path(start.name, goal.name)
-                    print(x)
                     return x
                 visited.add(current_node.value)
                 for child in current_node.children():
@@ -260,7 +260,7 @@ class Agent:
         return self.path[self.__current][1], self.path[self.__current][2], self.path[self.__current][3]
 
     def makecopy(self):
-        return Agent(self.start, self.goal, self.path, self.__current)
+        return Agent(self.start, self.goal, self.path.copy(), self.__current)
 
     def move(self, agents):
         if self.__current < len(self.path) - 1:
@@ -269,8 +269,11 @@ class Agent:
                 if self.start != agent.start:
                     if self.cell() == agent.cell():
                         self.__current -= 1
-                        return False
-        return True
+                        return agent.cell()
+        return None
+
+    def is_at_goal(self):
+        return self.__current == len(self.path) - 1
 
     def __str__(self):
         return self.start + " " + str(self.cell())
@@ -280,13 +283,19 @@ class Anode:
     n = None
     combinations = None
 
-    def __init__(self, agents, parent=None, t=0):
+    def __init__(self, agents, parent=None, t=0, combination='111'):
         self.parent = parent
         self.agents = agents
+        self.combination = combination
         self.t = t
 
     def __lt__(self, other):
-        return self.t < other.t
+        return self.t + self.h() < other.t + other.h()
+
+    def h(self):
+        dec = int(self.combination, 2)
+        # return dec flipped
+        return dec ^ (2 ** (len(self.combination) + 1) - 1)
 
     def __str__(self):
         agents = [str(agent) for agent in self.agents]
@@ -303,17 +312,17 @@ class Anode:
         for combination in Anode.combinations:
             move = 0
             agents = self.__copy_agents()
-            for agent in agents:
+            for i, agent in enumerate(agents):
                 if combination[move] == '1':
                     agent.move(agents)
                 move += 1
-            children.append(Anode(agents, self, self.t + 1))
+            children.append(Anode(agents, self, self.t + 1, combination))
         return children
 
     def reconstruct_path(self):
         path = []
         node = self
-        while node:
+        while node is not None:
             path.append(node)
             node = node.parent
         return path[::-1]
@@ -328,7 +337,8 @@ def mapf(map_data):
             count += 1
     agents.sort(key=lambda x: x.start)
     Anode.n = count
-    Anode.combinations = [bin(i)[2:].zfill(count) for i in range(2 ** count)][1:]
+    Anode.combinations = sorted([bin(i)[2:].zfill(count) for i in range(2 ** count)][1:])
+    print(Anode.combinations)
     start = Anode(agents)
     frontier = PriorityQueue()
     frontier.put(start)
