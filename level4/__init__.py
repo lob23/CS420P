@@ -1,8 +1,8 @@
 import copy
 import math
+import random
 import re
 from queue import Queue, PriorityQueue
-import numpy as np
 
 from utils.read_file import read_file
 
@@ -20,6 +20,7 @@ def chebyshev_distance(source, target):
 class Boundary:
     N = None
     M = None
+    F = None
 
 
 # Visual grid
@@ -270,6 +271,16 @@ class Agent:
                     if self.cell() == agent.cell():
                         self.__current -= 1
                         return 0
+            if self.start != 'A1' and self.__current == len(self.path) - 1:
+                Agent.map_data['atkds'][self.start] = self.path[self.__current][1:]
+                while True:
+                    x = random.randint(0, Boundary.N)
+                    y = random.randint(0, Boundary.M)
+                    z = random.randint(1, Boundary.F)
+                    if Agent.map_data[f'floor{z}']['floor_data'][x][y] == '0':
+                        Agent.map_data['atkds'].update({self.goal: (x, y, z)})
+                        break
+                return 1
         return 2
 
     def is_at_goal(self):
@@ -283,7 +294,7 @@ class Anode:
     n = None
     combinations = None
 
-    def __init__(self, agents, parent=None, t=0, combination='111'):
+    def __init__(self, agents, parent=None, t=0, combination='1111111111'):
         self.parent = parent
         self.agents = agents
         self.combination = combination
@@ -329,6 +340,10 @@ class Anode:
 
 
 def mapf(map_data):
+    Boundary.N = map_data['floor1']['height']
+    Boundary.M = map_data['floor1']['width']
+    Boundary.F = map_data['floor_count']
+    Agent.map_data = copy.deepcopy(map_data)
     count = 0
     agents = []
     for agent in map_data['atkds'].keys():
@@ -358,10 +373,8 @@ def mapf(map_data):
     return None
 
 
-def game(map_data):
-    Boundary.N = map_data['floor1']['height']
-    Boundary.M = map_data['floor1']['width']
-    Agent.map_data = copy.deepcopy(map_data)
+def level4():
+    map_data = read_file('level4/test.txt')
     solution = mapf(map_data)
     for e in solution:
         print(e)
