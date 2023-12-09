@@ -130,6 +130,9 @@ class Pnode:
     def __lt__(self, other):
         return self.cost() < other.cost()
 
+    def __str__(self):
+        return f"({self.value[0]}, {self.value[1]})"
+
     def h(self):
         return octile_distance(self.value, Pnode.vgoal)
 
@@ -196,6 +199,7 @@ class Pnode:
                     Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
+                print(visited)
                 Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                 for child in current_node.children():
                     index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
@@ -257,6 +261,8 @@ def simple_visualizer(map_data, path):
 def find_path(map_data, dtree):
     Pnode.valid.clear()
     Pnode.valid.add("0")
+    Pnode.valid.add("A1")
+    Pnode.valid.add("T1")
     path = Pnode.a_star(map_data, dtree[0], dtree[1])
     for i in range(1, len(dtree) - 1):
         path.extend(Pnode.a_star(map_data, dtree[i], dtree[i + 1])[1:])
