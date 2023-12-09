@@ -206,16 +206,20 @@ class Pnode:
         return None
 
 
-def find_dtree(map_data, start: str, goal: str):
+def find_dtree(map_data, start: str, goal: str, keys=None, debug=False):
     Dnode.map_data = map_data
     Dnode.goal = goal
     Dnode.vgoal = map_data['atkds'][Dnode.goal]
     start = Dnode(start, map_data['atkds'][start])
+    if keys is not None:
+        start.keys = keys
     frontier = PriorityQueue()
     frontier.put(start)
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
+        if debug:
+            print(current_node)
         if (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
@@ -249,19 +253,23 @@ def find_path(map_data, dtree):
 class Agent:
     map_data = None
 
-    def __init__(self, start, goal, path=None, current=0):
+    def __init__(self, start, goal, path=None, current=0, keys=None):
         self.start = start
         self.goal = goal
         self.path = path
+        self.keys = keys
         self.__current = current
         if self.path is None:
-            self.path = find_path(Agent.map_data, find_dtree(Agent.map_data, self.start, self.goal))
+            dtree = find_dtree(Agent.map_data, self.start, self.goal)
+            self.keys = dtree[-1].keys
+            self.path = find_path(Agent.map_data, dtree)
+
 
     def cell(self):
         return self.path[self.__current][1], self.path[self.__current][2], self.path[self.__current][3]
 
     def makecopy(self):
-        return Agent(self.start, self.goal, self.path.copy(), self.__current)
+        return Agent(self.start, self.goal, self.path.copy(), self.__current, self.keys.copy())
 
     def move(self, agents):
         if self.__current < len(self.path) - 1:
@@ -273,12 +281,17 @@ class Agent:
                         return 0
             if self.start != 'A1' and self.__current == len(self.path) - 1:
                 Agent.map_data['atkds'][self.start] = self.path[self.__current][1:]
+                Agent.map_data[f'floor{self.path[self.__current][3]}']['floor_data'][self.path[self.__current][1]][self.path[self.__current][2]] = self.start
+                Agent.map_data[f'floor{self.path[0][3]}']['floor_data'][self.path[0][1]][self.path[0][2]] = '0'
                 while True:
                     x = random.randint(0, Boundary.N - 1)
                     y = random.randint(0, Boundary.M - 1)
                     z = random.randint(1, Boundary.F)
                     if Agent.map_data[f'floor{z}']['floor_data'][x][y] == '0':
                         Agent.map_data['atkds'].update({self.goal: (x, y, z)})
+                        Agent.map_data[f'floor{z}']['floor_data'][x][y] = self.goal
+                        self.__current = 0
+                        self.path = find_path(Agent.map_data, find_dtree(Agent.map_data, self.start, self.goal, self.keys))
                         break
                 return 1
         return 2
