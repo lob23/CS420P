@@ -1,6 +1,9 @@
+import copy
 import math
-from queue import Queue, PriorityQueue
 import re
+from queue import Queue, PriorityQueue
+
+from utils.read_file import read_file
 
 
 def octile_distance(source, target):
@@ -18,6 +21,13 @@ class Boundary:
     M = None
 
 
+# Visual grid
+class Visualizer:
+    visual_grid = None
+    grid_start_x = None
+    grid_start_y = None
+
+
 class Dnode:
     goal = None
     vgoal = None
@@ -33,7 +43,7 @@ class Dnode:
             self.keys.add(self.name[1:])
 
     def __lt__(self, other):
-        return True if other is None else self.cost() < other.cost()
+        return self.cost() < other.cost()
 
     def __str__(self):
         return self.name
@@ -63,7 +73,7 @@ class Dnode:
             x, y, c = queue.get()
             if (x, y) not in visited:
                 visited.add((x, y))
-                if grid[x][y].startswith("T"):
+                if (x, y, z) == Dnode.vgoal:
                     children.append(Dnode(grid[x][y], (x, y, z), self, self.g + c))
                     continue
                 if (x, y) != (self.value[0], self.value[1]):
@@ -114,7 +124,7 @@ class Pnode:
         self.g = g
 
     def __lt__(self, other):
-        return True if other is None else self.cost() < other.cost()
+        return self.cost() < other.cost()
 
     def h(self):
         return octile_distance(self.value, Pnode.vgoal)
@@ -156,13 +166,16 @@ class Pnode:
             children.append(Pnode((x - 1, y + 1), self, self.g + 1))
         return children
 
-    def reconstruct_path(self):
+    def reconstruct_path(self, start: str, goal: str):
         path = []
         node = self
         while node:
-            path.append((node.value[0], node.value[1], Pnode.level))
+            path.append((None, node.value[0], node.value[1], Pnode.level))
             node = node.parent
-        return path[::-1]
+        path.reverse()
+        path[0] = (start, path[0][1], path[0][2], path[0][3])
+        path[len(path) - 1] = (goal, path[len(path) - 1][1], path[len(path) - 1][2], path[len(path) - 1][3])
+        return path
 
     @staticmethod
     def a_star(map_data, start: Dnode, goal: Dnode):
@@ -175,43 +188,47 @@ class Pnode:
         frontier.put(Pnode((start.value[0], start.value[1])))
         visited = set()
         while not frontier.empty():
-            current_node = frontier.get_nowait()
-            if current_node is not None and current_node.value not in visited:
+            current_node = frontier.get()
+            if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
-                    return current_node.reconstruct_path()
+                    x = current_node.reconstruct_path(start.name, goal.name)
+                    print(x)
+                    return x
                 visited.add(current_node.value)
                 for child in current_node.children():
-                    index = next((i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value), -1)
+                    index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
                     if child.value not in visited and index == -1:
                         frontier.put(child)
                     elif index != -1 and frontier.queue[index].cost() > child.cost():
-                        frontier.queue[index] = None
+                        frontier.queue.pop(index)
                         frontier.put(child)
         return None
 
 
-def find_dtree(map_data, agent, task):
+def find_dtree(map_data, start: str, goal: str):
     Dnode.map_data = map_data
-    Dnode.goal = task
+    Dnode.goal = goal
     Dnode.vgoal = map_data['atkds'][Dnode.goal]
-    start = Dnode(agent, map_data['atkds'][agent])
+    start = Dnode(start, map_data['atkds'][start])
     frontier = PriorityQueue()
     frontier.put(start)
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if current_node is not None and (current_node.value, tuple(current_node.keys)) not in visited:
+        if (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
+                # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
                 return current_node.reconstruct_path()
             visited.add((current_node.value, tuple(current_node.keys)))
             for child in current_node.children():
                 index = next(
-                    (i for i, e in enumerate(frontier.queue) if e is not None and e.value == child.value and e.keys == child.keys),
+                    (i for i, e in enumerate(frontier.queue) if e.value == child.value and e.keys == child.keys),
                     -1)
                 if (child.value, tuple(child.keys)) not in visited and index == -1:
                     frontier.put(child)
+                    # Visualizer.visual_grid[child.value[2] - 1][child.value[0]][child.value[1]].make_start()
                 elif index != -1 and frontier.queue[index].cost() > child.cost():
-                    frontier.queue[index] = None
+                    frontier.queue.pop(index)
                     frontier.put(child)
     return None
 
@@ -219,6 +236,9 @@ def find_dtree(map_data, agent, task):
 def find_path(map_data, dtree):
     Pnode.valid.clear()
     Pnode.valid.add("0")
+    for key in map_data['atkds'].keys():
+        if key.startswith("A") or key.startswith("T"):
+            Pnode.valid.add(key)
     path = Pnode.a_star(map_data, dtree[0], dtree[1])
     for i in range(1, len(dtree) - 1):
         path.extend(Pnode.a_star(map_data, dtree[i], dtree[i + 1])[1:])
@@ -226,8 +246,113 @@ def find_path(map_data, dtree):
 
 
 class Agent:
-    def __init__(self, name: str, start: (int, int, int), goal: (int, int, int), path: list[(int, int, int)]):
-        self.name = name
+    map_data = None
+
+    def __init__(self, start, goal, path=None, current=0):
         self.start = start
         self.goal = goal
         self.path = path
+        self.__current = current
+        if self.path is None:
+            self.path = find_path(Agent.map_data, find_dtree(Agent.map_data, self.start, self.goal))
+
+    def cell(self):
+        return self.path[self.__current][1], self.path[self.__current][2], self.path[self.__current][3]
+
+    def makecopy(self):
+        return Agent(self.start, self.goal, self.path, self.__current)
+
+    def move(self, agents):
+        if self.__current < len(self.path) - 1:
+            self.__current += 1
+            for agent in agents:
+                if self.start != agent.start:
+                    if self.cell() == agent.cell():
+                        self.__current -= 1
+                        return False
+        return True
+
+    def __str__(self):
+        return self.start + " " + str(self.cell())
+
+
+class Anode:
+    n = None
+    combinations = None
+
+    def __init__(self, agents, parent=None, t=0):
+        self.parent = parent
+        self.agents = agents
+        self.t = t
+
+    def __lt__(self, other):
+        return self.t < other.t
+
+    def __str__(self):
+        agents = [str(agent) for agent in self.agents]
+        return " ".join(agents) + " " + str(self.t)
+
+    def __copy_agents(self):
+        agents = []
+        for agent in self.agents:
+            agents.append(agent.makecopy())
+        return agents
+
+    def children(self):
+        children = []
+        for combination in Anode.combinations:
+            move = 0
+            agents = self.__copy_agents()
+            for agent in agents:
+                if combination[move] == '1':
+                    agent.move(agents)
+                move += 1
+            children.append(Anode(agents, self, self.t + 1))
+        return children
+
+    def reconstruct_path(self):
+        path = []
+        node = self
+        while node:
+            path.append(node)
+            node = node.parent
+        return path[::-1]
+
+
+def mapf(map_data):
+    count = 0
+    agents = []
+    for agent in map_data['atkds'].keys():
+        if agent.startswith('A'):
+            agents.append(Agent(agent, 'T' + agent[1:]))
+            count += 1
+    agents.sort(key=lambda x: x.start)
+    Anode.n = count
+    Anode.combinations = [bin(i)[2:].zfill(count) for i in range(2 ** count)][1:]
+    start = Anode(agents)
+    frontier = PriorityQueue()
+    frontier.put(start)
+    visited = set()
+    while not frontier.empty():
+        current_node = frontier.get_nowait()
+        if tuple([agent.cell() for agent in current_node.agents]) not in visited:
+            if current_node.agents[0].cell() == current_node.agents[0].path[-1][1:]:
+                return current_node.reconstruct_path()
+            visited.add(tuple([agent.cell() for agent in current_node.agents]))
+            for child in current_node.children():
+                index = next((i for i, e in enumerate(frontier.queue) if tuple([agent.cell() for agent in e.agents]) == tuple([agent.cell() for agent in child.agents])), -1)
+                if tuple([agent.cell() for agent in child.agents]) not in visited and index == -1:
+                    frontier.put(child)
+                elif index != -1 and frontier.queue[index].t > child.t:
+                    frontier.queue.pop(index)
+                    frontier.put(child)
+    return None
+
+
+def game(map_data):
+    Boundary.N = map_data['floor1']['height']
+    Boundary.M = map_data['floor1']['width']
+    Agent.map_data = map_data
+    solution = mapf(map_data)
+    for e in solution:
+        print(e)
