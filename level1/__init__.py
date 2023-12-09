@@ -96,6 +96,7 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
         counter += 1
+    Visualizer.visited_score = None
     return None
 
 
@@ -136,7 +137,7 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
         pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-
+    Visualizer.visited_score = None
     return None
 
 
@@ -166,7 +167,7 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
         pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-
+    Visualizer.visited_score = None
     return None
 
 
@@ -203,7 +204,7 @@ def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
         pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-
+    Visualizer.visited_score = None
     return None
 
 

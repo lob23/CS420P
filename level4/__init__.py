@@ -5,7 +5,7 @@ import re
 from queue import Queue, PriorityQueue
 
 from utils.read_file import read_file
-
+from utils.ui import *
 
 def octile_distance(source, target):
     dx = abs(source[0] - target[0])
@@ -25,9 +25,12 @@ class Boundary:
 
 # Visual grid
 class Visualizer:
+    visual_map = None
     visual_grid = None
     grid_start_x = None
     grid_start_y = None
+    visited_score = 0
+
 
 
 class Dnode:
@@ -114,6 +117,7 @@ class Dnode:
 
 
 class Pnode:
+    map_data = None
     goal = None
     vgoal = None
     grid = None
@@ -206,7 +210,7 @@ class Pnode:
         return None
 
 
-def find_dtree(map_data, start: str, goal: str, keys=None, debug=False):
+def find_dtree(map_data, start: str, goal: str, keys=None):
     Dnode.map_data = map_data
     Dnode.goal = goal
     Dnode.vgoal = map_data['atkds'][Dnode.goal]
@@ -218,8 +222,6 @@ def find_dtree(map_data, start: str, goal: str, keys=None, debug=False):
     visited = set()
     while not frontier.empty():
         current_node = frontier.get_nowait()
-        if debug:
-            print(current_node)
         if (current_node.value, tuple(current_node.keys)) not in visited:
             if current_node.name == Dnode.goal:
                 # Visualizer.visual_grid[current_node.value[2] - 1][current_node.value[0]][current_node.value[1]].make_end()
@@ -264,7 +266,6 @@ class Agent:
             self.keys = dtree[-1].keys
             self.path = find_path(Agent.map_data, dtree)
 
-
     def cell(self):
         return self.path[self.__current][1], self.path[self.__current][2], self.path[self.__current][3]
 
@@ -281,7 +282,8 @@ class Agent:
                         return 0
             if self.start != 'A1' and self.__current == len(self.path) - 1:
                 Agent.map_data['atkds'][self.start] = self.path[self.__current][1:]
-                Agent.map_data[f'floor{self.path[self.__current][3]}']['floor_data'][self.path[self.__current][1]][self.path[self.__current][2]] = self.start
+                Agent.map_data[f'floor{self.path[self.__current][3]}']['floor_data'][self.path[self.__current][1]][
+                    self.path[self.__current][2]] = self.start
                 Agent.map_data[f'floor{self.path[0][3]}']['floor_data'][self.path[0][1]][self.path[0][2]] = '0'
                 while True:
                     x = random.randint(0, Boundary.N - 1)
@@ -291,13 +293,15 @@ class Agent:
                         Agent.map_data['atkds'].update({self.goal: (x, y, z)})
                         Agent.map_data[f'floor{z}']['floor_data'][x][y] = self.goal
                         self.__current = 0
-                        self.path = find_path(Agent.map_data, find_dtree(Agent.map_data, self.start, self.goal, self.keys))
+                        self.path = find_path(Agent.map_data,
+                                              find_dtree(Agent.map_data, self.start, self.goal, self.keys))
                         break
                 return 1
         return 2
 
-    def is_at_goal(self):
-        return self.__current == len(self.path) - 1
+    def get_out_of_the_way(self, cell):
+        self.path.insert(1, (None, cell[0], cell[1], cell[2]))
+        self.path.insert(2, self.path[0])
 
     def __str__(self):
         return self.start + " " + str(self.cell())
@@ -307,11 +311,12 @@ class Anode:
     n = None
     combinations = None
 
-    def __init__(self, agents, parent=None, t=0, combination='1111111111'):
+    def __init__(self, agents, parent=None, t=0, combination=None, status=None):
         self.parent = parent
         self.agents = agents
-        self.combination = combination
         self.t = t
+        self.combination = '0' * Anode.n if combination is None else combination
+        self.status = '0' * Anode.n if status is None else status
 
     def __lt__(self, other):
         return self.t + self.h() < other.t + other.h()
@@ -323,7 +328,7 @@ class Anode:
 
     def __str__(self):
         agents = [str(agent) for agent in self.agents]
-        return " ".join(agents) + " " + str(self.t)
+        return " ".join(agents) + " " + f"status: {self.status}" + " " + f"t: {self.t}"
 
     def __copy_agents(self):
         agents = []
@@ -336,20 +341,73 @@ class Anode:
         for combination in Anode.combinations:
             move = 0
             agents = self.__copy_agents()
-            for i, agent in enumerate(agents):
+            status = ''
+            for agent in agents:
                 if combination[move] == '1':
-                    agent.move(agents)
+                    signal = agent.move(agents)
+                    if signal > 0:
+                        status += '1'
+                    else:
+                        status += '0'
+                else:
+                    status += '0'
                 move += 1
-            children.append(Anode(agents, self, self.t + 1, combination))
+            children.append(Anode(agents, self, self.t + 1, combination, status))
         return children
 
     def reconstruct_path(self):
         path = []
         node = self
         while node is not None:
+            Visualizer.visited_score += 1
+            for i in range(Anode.n):
+                pygame.time.wait(100)
+                draw_menu_level3(node.agents[i].cell()[2] - 1)
+                draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
+                     Visualizer.grid_start_x,
+                     Visualizer.grid_start_y)
+                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
+                pygame.display.update()
             path.append(node)
             node = node.parent
         return path[::-1]
+
+
+def prevent_deadlock(agents):
+    a1_path = set([cell[1:] for cell in agents[0].path])
+    for i in range(1, len(agents)):
+        ai_path = set([cell[1:] for cell in agents[i].path])
+        intersection = a1_path.intersection(ai_path)
+        union = a1_path.union(ai_path)
+        if agents[0].path[0][1:] in intersection and agents[i].path[0][1:] in intersection:
+            x = agents[i].path[0][1]
+            y = agents[i].path[0][2]
+            z = agents[i].path[0][3]
+            grid = Agent.map_data[f'floor{z}']['floor_data']
+            if x > 0 and grid[x - 1][y] == "0" and (x - 1, y, z) not in union:
+                agents[i].get_out_of_the_way((x - 1, y, agents[0].path[0][3]))
+                break
+            if x < Boundary.N - 1 and grid[x + 1][y] == "0" and (x + 1, y, z) not in union:
+                agents[i].get_out_of_the_way((x + 1, y, agents[0].path[0][3]))
+                break
+            if y > 0 and grid[x][y - 1] == "0" and (x, y - 1, z) not in union:
+                agents[i].get_out_of_the_way((x, y - 1, agents[0].path[0][3]))
+                break
+            if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
+                agents[i].get_out_of_the_way((x, y + 1, agents[0].path[0][3]))
+                break
+            if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
+                agents[i].get_out_of_the_way((x - 1, y - 1, agents[0].path[0][3]))
+                break
+            if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
+                agents[i].get_out_of_the_way((x + 1, y - 1, agents[0].path[0][3]))
+                break
+            if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
+                agents[i].get_out_of_the_way((x + 1, y + 1, agents[0].path[0][3]))
+                break
+            if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
+                agents[i].get_out_of_the_way((x - 1, y + 1, agents[0].path[0][3]))
+                break
 
 
 def mapf(map_data):
@@ -364,6 +422,7 @@ def mapf(map_data):
             agents.append(Agent(agent, 'T' + agent[1:]))
             count += 1
     agents.sort(key=lambda x: x.start)
+    prevent_deadlock(agents)
     Anode.n = count
     Anode.combinations = sorted([bin(i)[2:].zfill(count) for i in range(2 ** count)][1:])
     start = Anode(agents)
@@ -377,7 +436,9 @@ def mapf(map_data):
                 return current_node.reconstruct_path()
             visited.add(tuple([agent.cell() for agent in current_node.agents]))
             for child in current_node.children():
-                index = next((i for i, e in enumerate(frontier.queue) if tuple([agent.cell() for agent in e.agents]) == tuple([agent.cell() for agent in child.agents])), -1)
+                index = next((i for i, e in enumerate(frontier.queue) if
+                              tuple([agent.cell() for agent in e.agents]) == tuple(
+                                  [agent.cell() for agent in child.agents])), -1)
                 if tuple([agent.cell() for agent in child.agents]) not in visited and index == -1:
                     frontier.put(child)
                 elif index != -1 and frontier.queue[index].t > child.t:
@@ -385,9 +446,119 @@ def mapf(map_data):
                     frontier.put(child)
     return None
 
+def print_visual_grid(map_data):
+    visual_map = []
+    for floor, floor_data in map_data.items():
+        # Check if the data is a floor
+        if re.search(r'^floor\d+$', floor) is not None:
+            visual_map.append(make_grid(Boundary.N, Boundary.M, WIDTH))
+            for i in range(Boundary.N):
+                for j in range(Boundary.M):
+                    if floor_data['floor_data'][i][j] == "-1":
+                        visual_map[-1][i][j].make_barrier()
+                    elif floor_data['floor_data'][i][j].startswith("T"):
+                        visual_map[-1][i][j].make_closed_agent(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j].startswith("A"):
+                        visual_map[-1][i][j].make_agent(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j].startswith("K"):
+                        visual_map[-1][i][j].make_key(floor_data['floor_data'][i][j])
+                    elif re.search(r'^D(\d+)$', floor_data['floor_data'][i][j]) is not None:
+                        visual_map[-1][i][j].make_door(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j] == "DO":
+                        visual_map[-1][i][j].make_door("DO")
+                    elif floor_data['floor_data'][i][j] == "UP":
+                        visual_map[-1][i][j].make_door("UP")
 
-def level4():
+    return visual_map
+
+
+def level4(url):
+    map_data = read_file(url)
+    Boundary.N = map_data[f'floor{1}']['height']  # Row
+    Boundary.M = map_data[f'floor{1}']['width']  # Column
+
+    # Calculate the total grid size
+    total_grid_width = Boundary.M * (WIDTH // Boundary.M)
+    total_grid_height = Boundary.N * (WIDTH // Boundary.N)
+
+    # Calculate the starting position to center the grid
+    grid_start_x = (WIDTH - total_grid_width) // 2
+    grid_start_y = (WIDTH - total_grid_height) // 2
+
+    Visualizer.grid_start_x = grid_start_x
+    Visualizer.grid_start_y = grid_start_y
+
+    # Create the visualizer
+    visual_map = print_visual_grid(map_data)
+    Visualizer.visual_grid = visual_map
+    run = True
+    playagain = False
+
+    floor_index = 0
+    total_floor = len(visual_map)
+    Visualizer.visual_grid = visual_map
+
+
+    while run:
+        # Draw the visualizer
+        command = draw_menu_level3(floor_index)
+        if playagain:
+            playagain = False
+            Visualizer.visual_grid = print_visual_grid(map_data)
+
+        print_score(Visualizer.visited_score)
+
+        draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                playagain = False
+                pygame.quit()
+            if pygame.MOUSEBUTTONDOWN:
+                if command == 1:
+                    playagain = True
+                    Visualizer.visited_score = 0
+                    map_data = read_file(url)
+                    visual_map = print_visual_grid(map_data)
+                    Visualizer.visual_grid = visual_map
+                    solution = mapf(map_data)
+
+                # Go up floor
+                if command == 2:
+                    playagain = False
+                    if floor_index < total_floor - 1:
+                        floor_index += 1
+                    else:
+                        floor_index = 0
+                    command = -1
+                # Go down floor
+                if command == 3:
+                    playagain = False
+                    if floor_index > 0:
+                        floor_index -= 1
+                    else:
+                        floor_index = total_floor - 1
+
+                #  Exit menu
+                if command == 0:
+                    playagain = False
+                    run = False
+
+
+            pygame.display.flip()
+
+
+
+
+
+
+def test():
     map_data = read_file('level4/test.txt')
     solution = mapf(map_data)
+
     for e in solution:
         print(e)
+
+# test()

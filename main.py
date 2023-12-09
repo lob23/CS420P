@@ -2,6 +2,7 @@ import pygame
 from level1.__init__ import level1
 import level2.solution as level2
 from level3.__init__ import level3
+from level4.__init__ import level4
 from utils.ui import *
 
 
@@ -32,6 +33,7 @@ def main():
                     count += 1
                     print(count)
                 elif menu_command == 4:
+                    level4('level4/test.txt')
                     print("level 4")
 
 

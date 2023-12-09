@@ -44,7 +44,7 @@ class Visualizer:
         Visualizer.visual_map[path[0][0]][path[0][1]].make_start()
         for i in range(1, len(path)):
             Visualizer.visual_map[path[i][0]][path[i][1]].make_visited()
-            pygame.time.wait(100)
+            pygame.time.wait(10)
             draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
                  Visualizer.grid_start_y)
             pygame.display.update()
@@ -541,9 +541,9 @@ class game:
         #         remainGraph.append(temp)
         #         routine.update(subroutine)
 
-        # if (not path_graph[self.goal]):
-        #     print("UnSolvable")
-        #     return None
+        if (not path_graph[self.goal]):
+            print("UnSolvable")
+            return None
         # print(path_graph)
         # needed = self.backtrackPrunningImpossibleBranches(path_graph)
         # # print(needed)
