@@ -37,7 +37,7 @@ def main():
 
 
 
-
+        pygame.time.delay(100)
         pygame.display.flip()
 
 

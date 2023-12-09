@@ -275,8 +275,11 @@ def draw_menu_level1():
 
     return command
 
+def print_score(visited=0):
+    visitedtxt = font.render(f'Score {100 - visited}', True, 'black')
+    WIN.blit(visitedtxt, (620, 97))
 
-def draw_menu_level2():
+def draw_menu_level2(visited=0):
     WIN.fill('white')
     command = -1
     exitButton = Button('Exit Menu', (620, 420))
@@ -291,13 +294,15 @@ def draw_menu_level2():
     return command
 
 
-def draw_menu_level3(floor=0):
+def draw_menu_level3(floor=0, visited=0):
     WIN.fill('white')
     command = -1
     exitButton = Button('Exit Menu', (620, 420))
     exitButton.draw()
-    txt = font.render(f'Current Floor {floor}', True, 'black')
-    WIN.blit(txt, (620, 127))
+    floortxt = font.render(f'Current Floor {floor}', True, 'black')
+    WIN.blit(floortxt, (620, 127))
+    # visitedtxt = font.render(f'Score {100 - visited}', True, 'black')
+    # WIN.blit(visitedtxt, (620, 97))
     button1 = Button('Search', (620, 180))
     button1.draw()
     # Go up floor

@@ -6,6 +6,8 @@ import math
 
 from utils.read_file import read_file
 
+class Visualizer:
+    visited_score = 0
 
 class Node:
     def __init__(self, position, problem, cost=0, parent=None, spot=None):
@@ -211,10 +213,13 @@ def print_path(node):
         return
     node.spot.make_end()
     node = node.parent
+    counter = 1
     while node.parent is not None:
         node.spot.make_path()
         node = node.parent
+        counter += 1
     node.spot.make_start()
+    Visualizer.visited_score = counter
     return
 
 def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
@@ -294,6 +299,8 @@ def level1(url):
         if play_again and command > 0:
             visual_grid = print_grid(ROWS, COLUMN, grid, start_position, goal_position)
             play_again = False
+
+        print_score(Visualizer.visited_score)
         draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
 
         pygame.display.update()
@@ -307,12 +314,14 @@ def level1(url):
                 if command == 0:
                     run = False
                 elif command == 1:
+                    Visualizer.visited_score = 0
                     problem.is_heuristic = False
                     node = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     print_path(node)
                     command = -1
                     play_again = True
                 elif command == 2:
+                    Visualizer.visited_score = 0
                     problem.is_heuristic = False
                     node = (bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
                     print_path(node)
@@ -320,12 +329,14 @@ def level1(url):
                     play_again = True
 
                 elif command == 3:
+                    Visualizer.visited_score = 0
                     problem.is_heuristic = False
                     print_path(ucs(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
                     command = -1
                     play_again = True
 
                 elif command == 4:
+                    Visualizer.visited_score = 0
                     problem.is_heuristic = True
                     node = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
                     print_path(node)

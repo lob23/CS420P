@@ -15,6 +15,7 @@ class Visualizer:
     grid_start_y = None
     rows = None
     columns = None
+    visited = 0
 
     @staticmethod
     def print_visual_grid(grid):
@@ -44,7 +45,8 @@ class Visualizer:
                  Visualizer.grid_start_y)
             pygame.display.update()
             print(path[i][0], path[i][1])
-        Visualizer.visual_map[path[-1][0]][path[-1][1]].make_end()
+        Visualizer.visual_map[path[-1][0]][path[-1][1]].make_visited()
+        Visualizer.visited = len(path)
 
 
 class game:
@@ -714,13 +716,12 @@ def level2(url):
     playagain = False
     command = -1
     while run:
-        command = draw_menu_level2()
-
         # redraw the screen when play again
         if playagain:
             playagain = False
             Visualizer.visual_map = Visualizer.print_visual_grid(gameMap)
-
+        command = draw_menu_level2(Visualizer.visited)
+        print_score(Visualizer.visited)
         draw(WIN, visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
              Visualizer.grid_start_y)
 
@@ -733,6 +734,7 @@ def level2(url):
                 return
             if pygame.MOUSEBUTTONDOWN:
                 if command == 1:
+                    Visualizer.visited = 0
                     test = game(gameMap=gameMap)
                     start = timeit.default_timer()
                     result = test.algorithm()
@@ -741,13 +743,14 @@ def level2(url):
                     else:
                         print(result)
                         print("unsolvable")
+                    draw_menu_level2(Visualizer.visited)
                     stop = timeit.default_timer()
                     print('Time: ', stop - start)
                     playagain = True
                 elif command == 0:
                     run = False
                     return
-
+        pygame.time.delay(100)
         pygame.display.flip()
 
 # Astar
