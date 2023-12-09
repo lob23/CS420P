@@ -310,11 +310,12 @@ class Anode:
     n = None
     combinations = None
 
-    def __init__(self, agents, parent=None, t=0, combination='1111111111'):
+    def __init__(self, agents, parent=None, t=0, combination=None, status=None):
         self.parent = parent
         self.agents = agents
-        self.combination = combination
         self.t = t
+        self.combination = '0' * Anode.n if combination is None else combination
+        self.status = '0' * Anode.n if status is None else status
 
     def __lt__(self, other):
         return self.t + self.h() < other.t + other.h()
@@ -326,7 +327,7 @@ class Anode:
 
     def __str__(self):
         agents = [str(agent) for agent in self.agents]
-        return " ".join(agents) + " " + str(self.t)
+        return " ".join(agents) + " " + f"status: {self.status}" + " " + f"t: {self.t}"
 
     def __copy_agents(self):
         agents = []
@@ -339,20 +340,27 @@ class Anode:
         for combination in Anode.combinations:
             move = 0
             agents = self.__copy_agents()
-            for i, agent in enumerate(agents):
+            status = ''
+            for agent in agents:
                 if combination[move] == '1':
-                    agent.move(agents)
+                    signal = agent.move(agents)
+                    if signal > 0:
+                        status += '1'
+                    else:
+                        status += '0'
+                else:
+                    status += '0'
                 move += 1
-            children.append(Anode(agents, self, self.t + 1, combination))
+            children.append(Anode(agents, self, self.t + 1, combination, status))
         return children
 
     def reconstruct_path(self):
         path = []
         node = self
         while node is not None:
-            Visualizer.visited_score += 1
-            for i in range(Anode.n):
-                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
+            # Visualizer.visited_score += 1
+            # for i in range(Anode.n):
+            #     Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
             path.append(node)
             node = node.parent
         return path[::-1]
@@ -538,7 +546,7 @@ def level4(url):
 
 
 def test():
-    map_data = read_file('test.txt')
+    map_data = read_file('level4/test.txt')
     solution = mapf(map_data)
 
     for e in solution:
