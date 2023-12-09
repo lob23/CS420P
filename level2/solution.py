@@ -685,8 +685,6 @@ def main():
 
     print('Time: ', stop - start)
 
-main()
-
 def level2(url):
     gameMap = convertFileToGrid(url)
     Visualizer.rows = len(gameMap)
