@@ -8,6 +8,10 @@ import os.path
 import timeit
 from utils.ui import *
 
+def memoryMeasyrement():
+    pid = os.getpid()
+    proc = psutil.Process(pid)
+    return proc.memory_info().rss / (1024 ** 2)
 
 class Visualizer:
     visual_map = None
@@ -119,6 +123,56 @@ class game:
     #     if(isOpen[0] == True):
     #         return None   
 
+    def findDoor_ver2(self, pos, taken, tracker):
+        beginMem = memoryMeasyrement()
+        frontier = PriorityQueue()
+        frontier.put((0, (pos, ())))
+        
+        explored = set()
+        
+        route = {}
+        route[tuple((pos, ()))] = None
+        
+        while(frontier):
+            cost, node = frontier.get_nowait()
+            if(tuple(node) in explored):
+                continue
+            explored.add(node)
+            children = self.get_neighbors(node[0])
+            
+            for child in children:
+                if(child == self.goal):
+                    route[tuple(child)] = node 
+                    res = self.tree_optain(route)
+                    return res
+                if child in self.doors and tuple(self.doors[child]) not in node[1]:
+                    continue
+                if child in self.keys.values() and child not in node[1]:
+                    key_list = list(copy.deepcopy(node[1]))
+                    key_list.append(child)
+                    frontier.put((cost + 1, (child, tuple(key_list))))
+                    if(tuple((child, tuple(key_list))) in route):
+                        continue
+                    route[tuple((child, tuple(key_list)))] = node
+                if(child, node[1]) not in explored:
+                    frontier.put((cost + 1, (child, node[1])))
+                    if(tuple((child, node[1])) in route):
+                        continue
+                    route[tuple((child, node[1]))] = node
+            beginMem = max(beginMem, memoryMeasyrement()) 
+        
+        return None
+                
+                
+    
+    def tree_optain(self, route):
+        pack = []
+        node = route[self.goal]
+        while node != None:
+            pack.append(node[0])
+            node = route[node]
+        return pack
+        
     def findDoor(self, pos):
         frontier = deque([[pos, 0]])
         explored = set()
@@ -127,7 +181,7 @@ class game:
         path = []
         routine = {}
         
-        minimumByDoor = []
+        minimumByDoor = {}
         while (frontier):
 
             node, cost = frontier.popleft()
@@ -139,9 +193,16 @@ class game:
 
             for neighbor in neighbors:
                 if (neighbor in self.doors or neighbor == self.agent or neighbor in self.keys.values() or neighbor == self.goal):
-                    if (neighbor not in distenceDetermined and neighbor != pos):
-                        path.append([neighbor, cost + 1])
-                        distenceDetermined.add(neighbor)
+                    if (neighbor != pos):
+                        if (self.gameMap[neighbor[0]][neighbor[1]] not in minimumByDoor):
+                            path.append([neighbor, cost + 1])
+                            minimumByDoor[self.gameMap[neighbor[0]][neighbor[1]]] = cost + 1
+                        elif self.gameMap[neighbor[0]][neighbor[1]] in minimumByDoor and cost + 1 < minimumByDoor[self.gameMap[neighbor[0]][neighbor[1]]]:
+                            for temp_node, temp_cost in path:
+                                if self.gameMap[temp_node[0]][temp_node[1]] == self.gameMap[neighbor[0]][neighbor[1]]:
+                                    path.remove([temp_node, temp_cost])
+                                    break
+                            path.append([neighbor, cost + 1])
                         if ((neighbor, pos) not in routine):
                             routine[(neighbor, pos)] = node
 
@@ -149,7 +210,7 @@ class game:
                     frontier.extend([[neighbor, cost + 1]])
                     if ((neighbor, pos) not in routine):
                         routine[(neighbor, pos)] = node
-                
+            
         return (path, routine)
 
     def exploreDoor(self, door_list, door):
@@ -289,7 +350,6 @@ class game:
                         return
                     else:
                         temp = copy.deepcopy(door_with_keys)
-                        print(temp)
                         temp.insert(j, door_list[self.doors[door_path[startingPoint]]])
                         self.setKey(door_list, door_path, temp, startingPoint + 1, completeList)
 
@@ -451,49 +511,59 @@ class game:
 
         # list = self.exploreDoor(door_list=door_position_list, door=[self.goal])
         # print(list)
-
-        routine = {}
-        path, subroutine = self.findDoor(self.goal)
-        if (path == False and subroutine == False):
-            return None
-        path_graph[self.goal] = path
-        routine.update(subroutine)
-        remainGraph = [path]
-
-        while (remainGraph):
-            currentNode = remainGraph.pop(0)
-            for x in currentNode:
-                if (tuple(x[0]) in path_graph.keys()):
-                    continue
-                temp, subroutine = self.findDoor(x[0])
-                if (temp == False and subroutine == False):
-                    return None
-                path_graph[x[0]] = temp
-                remainGraph.append(temp)
-                routine.update(subroutine)
-
-        if (not path_graph[self.goal]):
-            print("UnSolvable")
-            return None
-        # print(path_graph)
-        needed = self.backtrackPrunningImpossibleBranches(path_graph)
-        print(needed)
-        for key, value_list in path_graph.items():
-            path_graph[key] = [item for item in value_list if tuple(item[0]) in needed]
-            
-        print(path_graph)
-                    
-        shortestPath = self.Astar(path_graph, needed)
+        tracker = []
+        tracker.append(self.agent)
+        taken = []
         
-        # print(shortestPath)
-        finalRoutine = self.getRoutine(routine, shortestPath)
-        if (not finalRoutine):
-            print("UnSolvable")
-            return None
-        print(finalRoutine)
-        # Print final routine to the screen
-        Visualizer.print_path(finalRoutine)
-        return finalRoutine
+        path = self.findDoor_ver2(self.agent, taken, tracker)
+        if(path == None):
+            print ("hehe")
+            return None 
+        else: 
+            print("path ne:   ", path)
+        # routine = {}
+        # path, subroutine = self.findDoor(self.goal)
+        # if (path == False and subroutine == False):
+        #     return None
+        # path_graph[self.goal] = path
+        # routine.update(subroutine)
+        # remainGraph = [path]
+
+        # while (remainGraph):
+        #     currentNode = remainGraph.pop(0)
+        #     for x in currentNode:
+        #         if (tuple(x[0]) in path_graph.keys()):
+        #             continue
+        #         temp, subroutine = self.findDoor(x[0])
+        #         if (temp == False and subroutine == False):
+        #             return None
+        #         path_graph[x[0]] = temp
+        #         remainGraph.append(temp)
+        #         routine.update(subroutine)
+
+        # if (not path_graph[self.goal]):
+        #     print("UnSolvable")
+        #     return None
+        # print(path_graph)
+        # needed = self.backtrackPrunningImpossibleBranches(path_graph)
+        # # print(needed)
+        # # for key, value_list in path_graph.items():
+        # #     path_graph[key] = [item for item in value_list if tuple(item[0]) in needed]
+            
+        # # print(path_graph)
+                    
+        # shortestPath = self.Astar(path_graph, needed)
+        
+        # finalRoutine = self.getRoutine(routine, shortestPath)
+        # if (not finalRoutine):
+        #     print("UnSolvable")
+        #     return None
+        # print(finalRoutine)
+        # # Print final routine to the screen
+        print("steps: ", len(path))
+        path.reverse()
+        Visualizer.print_path(path)
+        # return finalRoutine
 
     def getRoutine(self, routine, path):
         shortestRoutine = []
@@ -749,14 +819,15 @@ def level2(url):
                     test = game(gameMap=gameMap)
                     start = timeit.default_timer()
                     result = test.algorithm()
+                    stop = timeit.default_timer()
+                    print('Time: ', stop - start)
+
                     if result:
                         print(len(result))
                     else:
                         print(result)
                         print("unsolvable")
                     draw_menu_level2(Visualizer.visited)
-                    stop = timeit.default_timer()
-                    print('Time: ', stop - start)
                     playagain = True
                 elif command == 0:
                     run = False
