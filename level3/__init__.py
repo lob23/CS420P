@@ -300,10 +300,15 @@ def level3(file):
     total_grid_width = Boundary.M * (WIDTH // Boundary.M)
     total_grid_height = Boundary.N * (WIDTH // Boundary.N)
 
+    print(f"Total grid width: {total_grid_width}")
+    print(f"Total grid height: {total_grid_height}")
+
     # Calculate the starting position to center the grid
     grid_start_x = (WIDTH - total_grid_width) // 2
     grid_start_y = (WIDTH - total_grid_height) // 2
 
+    print(f"Grid start x: {grid_start_x}")
+    print(f"Grid start y: {grid_start_y}")
     Visualizer.grid_start_x = grid_start_x
     Visualizer.grid_start_y = grid_start_y
 

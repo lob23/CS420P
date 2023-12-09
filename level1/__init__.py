@@ -219,9 +219,6 @@ def print_path(node):
 
 def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
     visual_grid = make_grid(ROWS, COLUMN, WIDTH)
-    # grid = file['floor1']['floor_data']
-    start_position_column = -1
-    goal_position_column = -1
 
     grid[goal_position[0]][goal_position[1]] = '0'
     grid[start_position[0]][start_position[1]] = '0'
@@ -230,24 +227,24 @@ def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
 
     row_index = 0
     for line in grid:
-        # if 'A1' in line:
-        #     start_position_column = line.index('A1')
-        #     start_position = (row_index, start_position_column)
-        #     grid[row_index][start_position_column] = '0'
-        #     visual_grid[row_index][start_position_column].make_start()
-        #
-        # if 'T1' in line:
-        #     start_position_column = line.index('T1')
-        #     goal_position = (row_index, start_position_column)
-        #     grid[row_index][start_position_column] = '0'
-        #     visual_grid[row_index][start_position_column].make_end()
-
+    #     # if 'A1' in line:
+    #     #     start_position_column = line.index('A1')
+    #     #     start_position = (row_index, start_position_column)
+    #     #     grid[row_index][start_position_column] = '0'
+    #     #     visual_grid[row_index][start_position_column].make_start()
+    #     #
+    #     # if 'T1' in line:
+    #     #     start_position_column = line.index('T1')
+    #     #     goal_position = (row_index, start_position_column)
+    #     #     grid[row_index][start_position_column] = '0'
+    #     #     visual_grid[row_index][start_position_column].make_end()
+    #
         for column_index, cell in enumerate(line):
             if cell == '-1':
                 visual_grid[row_index][column_index].make_barrier()
 
         row_index += 1
-    return visual_grid, start_position, goal_position
+    return visual_grid
 
 
 def level1(url):
@@ -260,21 +257,24 @@ def level1(url):
     start_position = (x, y)
     x,y,z = file['atkds']['T1']
     goal_position = (x, y)
-    start_position_column = -1
-    goal_position_column = -1
 
     # visual_grid = make_grid(ROWS, COLUMN, WIDTH)
 
     # Calculate the total grid size
     total_grid_width = COLUMN * (WIDTH // COLUMN)
-    total_grid_height = ROWS * (WIDTH // COLUMN)
+    total_grid_height = ROWS * (WIDTH // ROWS)
+
+    print(total_grid_width, total_grid_height)
 
     # Calculate the starting position to center the grid
     grid_start_x = (WIDTH - total_grid_width) // 2
     grid_start_y = (WIDTH - total_grid_height) // 2
 
+    print(grid_start_x, grid_start_y)
+
     grid = file['floor1']['floor_data']
-    visual_grid, start_position, goal_position = print_grid(ROWS, COLUMN, grid, start_position, goal_position)
+    # print(len(grid), len(grid[0]))
+    visual_grid = print_grid(ROWS, COLUMN, grid, start_position, goal_position)
 
     problem = Problem(grid, start_position, goal_position, is_heuristic=True)
 
@@ -283,14 +283,20 @@ def level1(url):
     run = True
     play_again = False
     while run:
-        draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
         # command = -1
+        # Add draw menu before draw grid
         command = draw_menu_level1()
 
-        if play_again and command > 0:
-            visual_grid, start_position, goal_position = print_grid(ROWS, COLUMN, grid, start_position, goal_position)
-            play_again = False
+        # if play_again and command > 0:
+        #     visual_grid, start_position, goal_position = print_grid(ROWS, COLUMN, grid, start_position, goal_position)
+        #     play_again = False
 
+        if play_again and command > 0:
+            visual_grid = print_grid(ROWS, COLUMN, grid, start_position, goal_position)
+            play_again = False
+        draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
+
+        pygame.display.update()
 
 
         for event in pygame.event.get():
@@ -325,10 +331,7 @@ def level1(url):
                     print_path(node)
                     command = -1
                     play_again = True
-
-
-        pygame.time.delay(100)
-        pygame.display.update()
+        pygame.display.flip()
 
         # pygame.display.update()
 

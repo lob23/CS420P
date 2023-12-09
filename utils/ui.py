@@ -36,7 +36,6 @@ class UI:
 
 pygame.font.init()
 font = pygame.font.SysFont('freesansbold', 24)
-font_scale = pygame.font.SysFont('freesansbold', int(24 / 66 * UI.gap))
 
 
 class Spot:
@@ -126,9 +125,10 @@ class Spot:
         pygame.draw.rect(win, self.color, (self.x + grid_start_x, self.y + grid_start_y, self.width, self.width))
 
         if self.name is not None:
-            text = font.render(self.name, True, 'black')
+            font_scale = pygame.font.SysFont('freesansbold', int((UI.gap / 25) * 24))
+            text = font_scale.render(self.name, True, 'black')
             #     the text align center
-            WIN.blit(text, (self.x + grid_start_x + 5, self.y + grid_start_y + 5))
+            WIN.blit(text, (self.x + grid_start_x + 2, self.y + grid_start_y + 2))
 
     def update_neighbors(self, grid):
         self.neighbors = []
@@ -179,6 +179,7 @@ def make_grid(rows, column, width):
     grid = []
     gap = gap_fn(rows, column, width)
     UI.gap = gap
+    print(UI.gap)
     for i in range(rows):
         grid.append([])
         for j in range(column):
@@ -242,6 +243,7 @@ def draw_menu():
 
 
 def draw_menu_level1():
+    WIN.fill('white')
     command = -1
     # pygame.draw.rect(WIN, 'black', [100, 100, 300, 300])
     # pygame.draw.rect(WIN, 'green', [100, 100, 300, 300], 5)
