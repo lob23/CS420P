@@ -474,6 +474,7 @@ class game:
 
         if (not path_graph[self.goal]):
             print("UnSolvable")
+            Visualizer.visited = None
             return None
         # print(path_graph)
         needed = self.backtrackPrunningImpossibleBranches(path_graph)

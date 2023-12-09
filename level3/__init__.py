@@ -214,7 +214,7 @@ class Pnode:
             # redraw the screen
             draw_menu_level3(Pnode.level - 1)
             draw(WIN, Visualizer.visual_grid[Pnode.level - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
-
+        Visualizer.visited = None
         return None
 
 
@@ -354,14 +354,17 @@ def level3(file):
                     Visualizer.visited_score = 0
                     playagain = True
                     DTREE = find_dtree(map_data)
-                    for NODE in DTREE:
-                        print(NODE.name)
-                    print()
-                    path = find_path(map_data, DTREE)
-                    for NODE in path:
-                        Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
-                    visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
-                    visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
+                    if DTREE is None:
+                        Visualizer.visited_score = None
+                    else:
+                        for NODE in DTREE:
+                            print(NODE.name)
+                        print()
+                        path = find_path(map_data, DTREE)
+                        for NODE in path:
+                            Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
+                        visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
+                        visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
 
                 # Go up floor
                 if command == 2:

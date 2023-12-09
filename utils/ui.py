@@ -28,6 +28,10 @@ MAROON = (128, 0, 0)
 LIME = (0, 255, 0)
 CORAL = (255, 127, 80)
 INDIGO = (75, 0, 130)
+# More colors
+
+
+agent_color = [INDIGO, GOLD, BROWN, MAROON]
 
 
 class UI:
@@ -39,10 +43,13 @@ font = pygame.font.SysFont('freesansbold', 24)
 
 
 class Spot:
+    num_agent = 0
+
     def __init__(self, row, col, width, total_rows, total_columns):
         self.name = None
         self.row = row
         self.col = col
+        self.agent = None
         self.num_visited = 0
         self.x = col * width
         self.y = row * width
@@ -75,6 +82,15 @@ class Spot:
 
     def make_start(self):
         self.color = NAVY
+
+    def make_agent(self, agent):
+
+        self.color = agent_color[int(agent[1])]
+        self.name = agent
+
+    def make_closed_agent(self, target):
+        self.color = agent_color[int(target[1])]
+        self.name = target
 
     def make_closed(self):
         self.color = RED
@@ -275,9 +291,14 @@ def draw_menu_level1():
 
     return command
 
+
 def print_score(visited=0):
-    visitedtxt = font.render(f'Score {100 - visited}', True, 'black')
+    if visited is None:
+        visitedtxt = font.render(f'Score: Cannot find any paths', True, 'black')
+    else:
+        visitedtxt = font.render(f'Score {100 - visited}', True, 'black')
     WIN.blit(visitedtxt, (620, 97))
+
 
 def draw_menu_level2(visited=0):
     WIN.fill('white')

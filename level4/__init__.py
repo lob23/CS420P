@@ -5,7 +5,7 @@ import re
 from queue import Queue, PriorityQueue
 
 from utils.read_file import read_file
-
+from utils.ui import *
 
 def octile_distance(source, target):
     dx = abs(source[0] - target[0])
@@ -28,6 +28,8 @@ class Visualizer:
     visual_grid = None
     grid_start_x = None
     grid_start_y = None
+    visited_score = 0
+
 
 
 class Dnode:
@@ -347,6 +349,9 @@ class Anode:
         path = []
         node = self
         while node is not None:
+            Visualizer.visited_score += 1
+            for i in range(Anode.n):
+                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
             path.append(node)
             node = node.parent
         return path[::-1]
@@ -385,9 +390,117 @@ def mapf(map_data):
                     frontier.put(child)
     return None
 
+def print_visual_grid(map_data):
+    visual_map = []
+    for floor, floor_data in map_data.items():
+        # Check if the data is a floor
+        if re.search(r'^floor\d+$', floor) is not None:
+            visual_map.append(make_grid(Boundary.N, Boundary.M, WIDTH))
+            for i in range(Boundary.N):
+                for j in range(Boundary.M):
+                    if floor_data['floor_data'][i][j] == "-1":
+                        visual_map[-1][i][j].make_barrier()
+                    elif floor_data['floor_data'][i][j].startswith("T"):
+                        visual_map[-1][i][j].make_closed_agent(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j].startswith("A"):
+                        visual_map[-1][i][j].make_agent(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j].startswith("K"):
+                        visual_map[-1][i][j].make_key(floor_data['floor_data'][i][j])
+                    elif re.search(r'^D(\d+)$', floor_data['floor_data'][i][j]) is not None:
+                        visual_map[-1][i][j].make_door(floor_data['floor_data'][i][j])
+                    elif floor_data['floor_data'][i][j] == "DO":
+                        visual_map[-1][i][j].make_door("DO")
+                    elif floor_data['floor_data'][i][j] == "UP":
+                        visual_map[-1][i][j].make_door("UP")
 
-def level4():
-    map_data = read_file('level4/test.txt')
+    return visual_map
+
+
+def level4(url):
+    map_data = read_file(url)
+    Boundary.N = map_data[f'floor{1}']['height']  # Row
+    Boundary.M = map_data[f'floor{1}']['width']  # Column
+
+    # Calculate the total grid size
+    total_grid_width = Boundary.M * (WIDTH // Boundary.M)
+    total_grid_height = Boundary.N * (WIDTH // Boundary.N)
+
+    # Calculate the starting position to center the grid
+    grid_start_x = (WIDTH - total_grid_width) // 2
+    grid_start_y = (WIDTH - total_grid_height) // 2
+
+    Visualizer.grid_start_x = grid_start_x
+    Visualizer.grid_start_y = grid_start_y
+
+    # Create the visualizer
+    visual_map = print_visual_grid(map_data)
+    Visualizer.visual_grid = visual_map
+    run = True
+    playagain = False
+
+    floor_index = 0
+    total_floor = len(visual_map)
+
+    while run:
+        # Draw the visualizer
+        command = draw_menu_level3(floor_index)
+        if playagain:
+            playagain = False
+            Visualizer.visual_grid = print_visual_grid(map_data)
+
+        print_score(Visualizer.visited_score)
+
+        draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                playagain = False
+                pygame.quit()
+            if pygame.MOUSEBUTTONDOWN:
+                if command == 1:
+                    playagain = True
+                    Visualizer.visited_score = 0
+                    map_data = read_file(url)
+                    visual_map = print_visual_grid(map_data)
+                    Visualizer.visual_grid = visual_map
+                    solution = mapf(map_data)
+
+                # Go up floor
+                if command == 2:
+                    playagain = False
+                    if floor_index < total_floor - 1:
+                        floor_index += 1
+                    else:
+                        floor_index = 0
+                    command = -1
+                # Go down floor
+                if command == 3:
+                    playagain = False
+                    if floor_index > 0:
+                        floor_index -= 1
+                    else:
+                        floor_index = total_floor - 1
+
+                #  Exit menu
+                if command == 0:
+                    playagain = False
+                    run = False
+
+
+            pygame.display.flip()
+
+
+
+
+
+
+def test():
+    map_data = read_file('test.txt')
     solution = mapf(map_data)
+
     for e in solution:
         print(e)
+
+# test()
