@@ -125,7 +125,7 @@ class game:
         path = []
         routine = {}
         
-        minimumByDoor = {}
+        minimumByDoor = []
         while (frontier):
 
             node, cost = frontier.popleft()
@@ -147,6 +147,7 @@ class game:
                     frontier.extend([[neighbor, cost + 1]])
                     if ((neighbor, pos) not in routine):
                         routine[(neighbor, pos)] = node
+                
         return (path, routine)
 
     def exploreDoor(self, door_list, door):
@@ -182,6 +183,7 @@ class game:
         frontier.append(self.goal)
         
         explored = set()
+        isInFrontier = set()
         needed = set()
         
         while (frontier):
@@ -193,21 +195,27 @@ class game:
             
             for p,q in path[node]:
                 if(self.agent == p):
+                    
                     is_open = True
                     
             if is_open == True:
                 continue
             for p,q in path[node]:
-                if(tuple(p) in self.doors and p not in needed):
+                if(tuple(p) in self.doors):
                     if(self.doors[p] == []): 
                         continue
-                    needed.add(p)
+                    if(p not in needed):
+                        needed.add(p)                    
+                        frontier.append(p)
+                        
+
                     if (self.doors[p] not in needed):
                         needed.add(self.doors[p])
                         frontier.append(self.doors[p])
-        
+                        
         needed.add(self.agent)
         needed.add(self.goal)
+        
         return needed
             
 
@@ -314,11 +322,12 @@ class game:
         return neighbors
 
     def heuristic(self, position, target):
-        return max(abs(position[0] - target[0]), abs(position[1] - target[1]))
+        dx = abs(position[0] - target[0])
+        dy = abs(position[1] - target[1])
+        return dx + dy + (math.sqrt(2) - 2) * min(dx, dy)
 
     def Astar(self, path_list, needed):
         frontier = PriorityQueue()
-
         frontier.put((self.heuristic(self.agent, self.goal), ([self.agent], 0)))
         i = 0
         pygame.time.wait(1000)
@@ -340,18 +349,13 @@ class game:
             Visualizer.visual_map[cur_node[-1][0]][cur_node[-1][1]].make_visited_key_door()
 
             for node in adjacentNodes:
-
+                
+               
                 if (tuple(node[0]) in self.doors.keys() and self.doors[tuple(node[0])] not in cur_node):
                     continue
 
                 if (tuple(node[0]) in list(self.keys.values()) and tuple(node[0]) in cur_node):
                     continue
-                
-                if (tuple(node[0]) not in needed):
-                    print(node[0])
-                    continue
-                
-                print("....", node)
                 
                 temp = copy.deepcopy(cur_node)
                 temp.append(node[0])
@@ -469,10 +473,17 @@ class game:
         if (not path_graph[self.goal]):
             print("UnSolvable")
             return None
+        # print(path_graph)
         needed = self.backtrackPrunningImpossibleBranches(path_graph)
-        # print(needed)
+        print(needed)
+        for key, value_list in path_graph.items():
+            path_graph[key] = [item for item in value_list if tuple(item[0]) in needed]
+            
+        print(path_graph)
+                    
         shortestPath = self.Astar(path_graph, needed)
-        print(shortestPath)
+        
+        # print(shortestPath)
         finalRoutine = self.getRoutine(routine, shortestPath)
         if (not finalRoutine):
             print("UnSolvable")
