@@ -198,10 +198,11 @@ class game:
             if is_open == True:
                 continue
             for p,q in path[node]:
-                
                 if(tuple(p) in self.doors and p not in needed):
+                    if(self.doors[p] == []): 
+                        continue
                     needed.add(p)
-                    if (self.doors[p] and self.doors[p] not in needed):
+                    if (self.doors[p] not in needed):
                         needed.add(self.doors[p])
                         frontier.append(self.doors[p])
         
@@ -347,7 +348,10 @@ class game:
                     continue
                 
                 if (tuple(node[0]) not in needed):
+                    print(node[0])
                     continue
+                
+                print("....", node)
                 
                 temp = copy.deepcopy(cur_node)
                 temp.append(node[0])
@@ -466,8 +470,9 @@ class game:
             print("UnSolvable")
             return None
         needed = self.backtrackPrunningImpossibleBranches(path_graph)
+        # print(needed)
         shortestPath = self.Astar(path_graph, needed)
-        # print(shortestPath)
+        print(shortestPath)
         finalRoutine = self.getRoutine(routine, shortestPath)
         if (not finalRoutine):
             print("UnSolvable")
@@ -730,7 +735,12 @@ def level2(url):
                 if command == 1:
                     test = game(gameMap=gameMap)
                     start = timeit.default_timer()
-                    print(len(test.algorithm()))
+                    result = test.algorithm()
+                    if result:
+                        print(len(result))
+                    else:
+                        print(result)
+                        print("unsolvable")
                     stop = timeit.default_timer()
                     print('Time: ', stop - start)
                     playagain = True

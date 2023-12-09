@@ -21,14 +21,14 @@ def main():
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
                 if menu_command == 1:
-                    level1()
+                    level1('src/maps/input.txt')
                 elif menu_command == 2:
                     print("level 2")
-                    level2.level2('level2/input.txt')
+                    level2.level2('src/maps/input.txt')
                     # level2.main()
                 elif menu_command == 3:
                     print("level 3")
-                    level3('level3/test.txt')
+                    level3('src/maps/input.txt')
                     count += 1
                     print(count)
                 elif menu_command == 4:

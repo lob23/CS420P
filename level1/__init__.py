@@ -250,9 +250,9 @@ def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
     return visual_grid, start_position, goal_position
 
 
-def level1():
+def level1(url):
     # Example usage
-    file = read_file('./level1/input.txt')
+    file = read_file(url)
     print(file)
     ROWS = file['floor1']['height']
     COLUMN = file['floor1']['width']
