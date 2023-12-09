@@ -25,6 +25,7 @@ class Boundary:
 
 # Visual grid
 class Visualizer:
+    visual_map = None
     visual_grid = None
     grid_start_x = None
     grid_start_y = None
@@ -358,9 +359,15 @@ class Anode:
         path = []
         node = self
         while node is not None:
-            # Visualizer.visited_score += 1
-            # for i in range(Anode.n):
-            #     Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
+            Visualizer.visited_score += 1
+            for i in range(Anode.n):
+                pygame.time.wait(100)
+                draw_menu_level3(node.agents[i].cell()[2] - 1)
+                draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
+                     Visualizer.grid_start_x,
+                     Visualizer.grid_start_y)
+                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
+                pygame.display.update()
             path.append(node)
             node = node.parent
         return path[::-1]
@@ -489,6 +496,8 @@ def level4(url):
 
     floor_index = 0
     total_floor = len(visual_map)
+    Visualizer.visual_grid = visual_map
+
 
     while run:
         # Draw the visualizer
