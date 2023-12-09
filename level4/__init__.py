@@ -274,8 +274,8 @@ class Agent:
             if self.start != 'A1' and self.__current == len(self.path) - 1:
                 Agent.map_data['atkds'][self.start] = self.path[self.__current][1:]
                 while True:
-                    x = random.randint(0, Boundary.N)
-                    y = random.randint(0, Boundary.M)
+                    x = random.randint(0, Boundary.N - 1)
+                    y = random.randint(0, Boundary.M - 1)
                     z = random.randint(1, Boundary.F)
                     if Agent.map_data[f'floor{z}']['floor_data'][x][y] == '0':
                         Agent.map_data['atkds'].update({self.goal: (x, y, z)})
