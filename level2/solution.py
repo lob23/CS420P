@@ -134,17 +134,20 @@ class game:
         route[tuple((pos, ()))] = None
         
         while(frontier):
-            cost, node = frontier.get_nowait()
+            try:
+                cost, node = frontier.get_nowait()
+            except:
+                return None, beginMem
             if(tuple(node) in explored):
                 continue
             explored.add(node)
             children = self.get_neighbors(node[0])
-            
             for child in children:
+ 
                 if(child == self.goal):
                     route[tuple(child)] = node 
                     res = self.tree_optain(route)
-                    return res
+                    return res, beginMem
                 if child in self.doors and tuple(self.doors[child]) not in node[1]:
                     continue
                 if child in self.keys.values() and child not in node[1]:
@@ -160,8 +163,10 @@ class game:
                         continue
                     route[tuple((child, node[1]))] = node
             beginMem = max(beginMem, memoryMeasyrement()) 
-        
-        return None
+            # draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
+            #    Visualizer.grid_start_y)
+            # pygame.display.update()
+        return None, beginMem
                 
                 
     
@@ -515,12 +520,8 @@ class game:
         tracker.append(self.agent)
         taken = []
         
-        path = self.findDoor_ver2(self.agent, taken, tracker)
-        if(path == None):
-            print ("hehe")
-            return None 
-        else: 
-            print("path ne:   ", path)
+        path, mem = self.findDoor_ver2(self.agent, taken, tracker)
+
         # routine = {}
         # path, subroutine = self.findDoor(self.goal)
         # if (path == False and subroutine == False):
@@ -541,9 +542,9 @@ class game:
         #         remainGraph.append(temp)
         #         routine.update(subroutine)
 
-        if (not path_graph[self.goal]):
-            print("UnSolvable")
-            return None
+        # if (not path_graph[self.goal]):
+        #     print("UnSolvable")
+        #     return None
         # print(path_graph)
         # needed = self.backtrackPrunningImpossibleBranches(path_graph)
         # # print(needed)
@@ -560,9 +561,10 @@ class game:
         #     return None
         # print(finalRoutine)
         # # Print final routine to the screen
-        print("steps: ", len(path))
-        path.reverse()
-        Visualizer.print_path(path)
+        if path:
+            path.reverse()
+            Visualizer.print_path(path)
+        return path
         # return finalRoutine
 
     def getRoutine(self, routine, path):

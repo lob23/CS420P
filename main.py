@@ -22,7 +22,7 @@ def main():
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
                 if menu_command == 1:
-                    level1('level1/input.txt')
+                    level1('src/maps/input.txt')
                 elif menu_command == 2:
                     print("level 2")
                     level2.level2('src/maps/input.txt')
