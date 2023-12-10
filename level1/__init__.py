@@ -3,6 +3,7 @@ from queue import Queue
 import pygame
 from utils.ui import *
 import math
+import time
 
 from utils.read_file import read_file
 
@@ -77,7 +78,6 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
             # draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
             return node
         explored.add(tuple(node.position))
-        print(frontier.qsize())
         for neighbor in problem.get_neighbors(node, visual_grid, explored):
             if tuple(neighbor.position) not in frontier_set:
                 frontier.put(neighbor)
@@ -331,7 +331,9 @@ def level1(url):
                     pygame.display.update()
                     problem.is_heuristic = False
                     name_search = 'DFS'
+                    start = time.process_time()
                     node = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
+                    print('Time: ', 1000.0*( time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
                     pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
@@ -341,7 +343,9 @@ def level1(url):
                     Visualizer.visited_score = 0
                     name_search = 'BFS'
                     problem.is_heuristic = False
-                    node = (bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    start = time.process_time()
+                    node = bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
+                    print('Time: ', 1000.0*( time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
 
@@ -352,7 +356,9 @@ def level1(url):
                     Visualizer.visited_score = 0
                     problem.is_heuristic = False
                     name_search = 'UCS'
+                    start = time.process_time()
                     node = (ucs(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    print('Time: ', 1000.0*( time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
                     pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
@@ -363,11 +369,12 @@ def level1(url):
                     Visualizer.visited_score = 0
                     name_search = 'A_star'
                     problem.is_heuristic = True
+                    start = time.process_time()
                     node = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    print('Time: ', 1000.0*( time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
                     pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
-
                     play_again = True
 
                 # elif command == 5:
