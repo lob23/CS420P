@@ -376,11 +376,18 @@ def visual_path(path):
                 Visualizer.agent_visual[int(agent.start[1:])][agent.cell()[2] - 1][agent.cell()[0]][
                     agent.cell()[1]].make_visited()
             Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][
-                node.agents[i].cell()[1]].make_path()
+                node.agents[i].cell()[1]].make_agent(node.agents[i].start)
             draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
                  Visualizer.grid_start_x,
                  Visualizer.grid_start_y)
+            pygame.time.delay(100)
             pygame.display.update()
+        for i in range(Anode.n):
+            if node != path[-1]:
+                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][
+                    node.agents[i].cell()[1]].make_path()
+                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][
+                    node.agents[i].cell()[1]].name = ''
         pygame.time.wait(100)
     num_agent = len(path[0].agents)
     len_path = len(path)
