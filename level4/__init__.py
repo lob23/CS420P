@@ -7,7 +7,6 @@ from queue import Queue, PriorityQueue
 from utils.read_file import read_file
 from utils.ui import *
 
-
 def octile_distance(source, target):
     dx = abs(source[0] - target[0])
     dy = abs(source[1] - target[1])
@@ -26,6 +25,7 @@ class Boundary:
 
 # Visual grid
 class Visualizer:
+    visual_map = None
     visual_grid = None
     grid_start_x = None
     grid_start_y = None
@@ -315,7 +315,6 @@ class Anode:
     def __init__(self, agents, parent=None, t=0, combination=None, status=None):
         self.parent = parent
         self.agents = agents
-        self.visual_map = None
         self.t = t
         self.combination = '0' * Anode.n if combination is None else combination
         self.status = '0' * Anode.n if status is None else status
@@ -360,32 +359,19 @@ class Anode:
     def reconstruct_path(self):
         path = []
         node = self
-        Visualizer.agent_visual[0] = Visualizer.visual_grid
-        for agent in node.agents:
-            Visualizer.agent_visual[int(agent.start[1:])] = copy.deepcopy(Visualizer.visual_grid)
         while node is not None:
-
+            Visualizer.visited_score += 1
+            for i in range(Anode.n):
+                pygame.time.wait(100)
+                draw_menu_level3(node.agents[i].cell()[2] - 1)
+                draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
+                     Visualizer.grid_start_x,
+                     Visualizer.grid_start_y)
+                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
+                pygame.display.update()
             path.append(node)
             node = node.parent
         return path[::-1]
-
-
-def visual_path(path):
-
-    for node in path:
-        for i in range(Anode.n):
-            for agent in node.agents:
-                Visualizer.agent_visual[int(agent.start[1:])][agent.cell()[2] - 1][agent.cell()[0]][agent.cell()[1]].make_visited()
-            Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][
-                node.agents[i].cell()[1]].make_path()
-            draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
-                 Visualizer.grid_start_x,
-                 Visualizer.grid_start_y)
-            pygame.display.update()
-        pygame.time.wait(100)
-    num_agent = len(path[0].agents)
-    len_path = len(path)
-    Visualizer.visited_score = num_agent * len_path
 
 
 def prevent_deadlock(agents):
@@ -395,38 +381,37 @@ def prevent_deadlock(agents):
         intersection = a1_path.intersection(ai_path)
         union = a1_path.union(ai_path)
         if agents[0].path[0][1:] in intersection and agents[i].path[0][1:] in intersection:
-            x = agents[i].path[0][1]
-            y = agents[i].path[0][2]
-            z = agents[i].path[0][3]
-            grid = Agent.map_data[f'floor{z}']['floor_data']
-            if x > 0 and grid[x - 1][y] == "0" and (x - 1, y, z) not in union:
-                agents[i].get_out_of_the_way((x - 1, y, agents[0].path[0][3]))
-                break
-            if x < Boundary.N - 1 and grid[x + 1][y] == "0" and (x + 1, y, z) not in union:
-                agents[i].get_out_of_the_way((x + 1, y, agents[0].path[0][3]))
-                break
-            if y > 0 and grid[x][y - 1] == "0" and (x, y - 1, z) not in union:
-                agents[i].get_out_of_the_way((x, y - 1, agents[0].path[0][3]))
-                break
-            if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
-                agents[i].get_out_of_the_way((x, y + 1, agents[0].path[0][3]))
-                break
-            if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (
-            x - 1, y - 1, z) not in union:
-                agents[i].get_out_of_the_way((x - 1, y - 1, agents[0].path[0][3]))
-                break
-            if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] and grid[x + 1][
-                y - 1] == "0" and (x + 1, y - 1, z) not in union:
-                agents[i].get_out_of_the_way((x + 1, y - 1, agents[0].path[0][3]))
-                break
-            if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] and grid[x + 1][
-                y + 1] == "0" and (x + 1, y + 1, z) not in union:
-                agents[i].get_out_of_the_way((x + 1, y + 1, agents[0].path[0][3]))
-                break
-            if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] and grid[x - 1][
-                y + 1] == "0" and (x - 1, y + 1, z) not in union:
-                agents[i].get_out_of_the_way((x - 1, y + 1, agents[0].path[0][3]))
-                break
+            intersection.remove(agents[0].path[0][1:])
+            for j, cell in enumerate(agents[i].path):
+                if cell[1:] in intersection:
+                    x = cell[1]
+                    y = cell[2]
+                    z = cell[3]
+                    grid = Agent.map_data[f'floor{z}']['floor_data']
+                    if x > 0 and grid[x - 1][y] == "0" and (x - 1, y, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x - 1, y, z))
+                        break
+                    if x < Boundary.N - 1 and grid[x + 1][y] == "0" and (x + 1, y, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x + 1, y, z))
+                        break
+                    if y > 0 and grid[x][y - 1] == "0" and (x, y - 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x, y - 1, z))
+                        break
+                    if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x, y + 1, z))
+                        break
+                    if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x - 1, y - 1, z))
+                        break
+                    if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x + 1, y - 1, z))
+                        break
+                    if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] == "0" and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x + 1, y + 1, z))
+                        break
+                    if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] == "0" and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x - 1, y + 1, z))
+                        break
 
 
 def mapf(map_data):
@@ -465,7 +450,6 @@ def mapf(map_data):
                     frontier.put(child)
     return None
 
-
 def print_visual_grid(map_data):
     visual_map = []
     for floor, floor_data in map_data.items():
@@ -496,8 +480,6 @@ def level4(url):
     map_data = read_file(url)
     Boundary.N = map_data[f'floor{1}']['height']  # Row
     Boundary.M = map_data[f'floor{1}']['width']  # Column
-
-
 
     # Calculate the total grid size
     total_grid_width = Boundary.M * (WIDTH // Boundary.M)
@@ -586,6 +568,10 @@ def level4(url):
 
             pygame.time.wait(100)
             pygame.display.flip()
+
+
+
+
 
 
 def test():
