@@ -373,7 +373,10 @@ def level3(file):
                         print('Time: ', stop - start)
                         for NODE in path:
                             Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_visited()
+
+                            draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
                             pygame.display.update()
+                            pygame.time.delay(10)
 
 
 
