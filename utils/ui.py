@@ -33,7 +33,7 @@ INDIGO = (75, 0, 130)
 # More colors
 
 
-agent_color = [INDIGO, GOLD, GREY, MAROON]
+agent_color = [TEAL, TEAL, TURQUOISE, GREY, MAROON]
 
 
 class UI:
