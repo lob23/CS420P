@@ -54,7 +54,7 @@ class Problem:
             dx = abs(node.position[0] - self.goal[0])
             dy = abs(node.position[1] - self.goal[1])
             d1 = 1
-            d2 = 1
+            d2 = math.sqrt(2)
             return d1 * (dx + dy) + (d2 - 2 * d1) * min(dx, dy)
         else:
             return 0
@@ -327,6 +327,8 @@ def level1(url):
                 elif command == 1:
                     Visualizer.visited_score = 0
                     # print_score(Visualizer.visited_score)
+                    draw(WIN, visual_grid, ROWS, COLUMN, WIDTH, grid_start_x, grid_start_y)
+                    pygame.display.update()
                     problem.is_heuristic = False
                     name_search = 'DFS'
                     node = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
