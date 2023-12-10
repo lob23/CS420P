@@ -105,7 +105,7 @@ class Spot:
 
     def make_visited(self):
         self.num_visited += 1
-        self.color = self.get_heatmap_color(self.num_visited / 20)
+        self.color = self.get_heatmap_color(self.num_visited / 10)
 
     def make_visited_key_door(self):
         self.color = LIME
