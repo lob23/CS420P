@@ -414,7 +414,7 @@ def prevent_deadlock(agents):
                         agents[i].get_out_of_the_way(j, (x, y + 1, z))
                         break
                     if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (
-                    x - 1, y - 1, z) not in union:
+                            x - 1, y - 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x - 1, y - 1, z))
                         break
                     if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][
@@ -494,6 +494,15 @@ def print_visual_grid(map_data):
     return visual_map
 
 
+def save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y):
+    change_agent_and_redraw(Visualizer.agent_visual[agent_index][floor_index], grid_start_x, grid_start_y)
+    pygame.display.update()
+    if agent_index == 0:
+        agent_index = '_print_path'
+
+    pygame.image.save(WIN, f'src/images/level4/floor{floor_index}_agent{agent_index}.jpg')
+
+
 def level4(url):
     map_data = read_file(url)
     Boundary.N = map_data[f'floor{1}']['height']  # Row
@@ -554,6 +563,7 @@ def level4(url):
                     solution = mapf(map_data)
                     Visualizer.agent_total = len(solution[0].agents)
                     visual_path(solution)
+                    save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y)
 
                 # Go up floor
                 if command == 2:
@@ -563,6 +573,8 @@ def level4(url):
                     else:
                         floor_index = 0
                     command = -1
+                    save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y)
+
                 # Go down floor
                 if command == 3:
                     playagain = False
@@ -570,6 +582,8 @@ def level4(url):
                         floor_index -= 1
                     else:
                         floor_index = total_floor - 1
+                    save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y)
+
 
                 if command == 4:
                     playagain = False
@@ -577,7 +591,7 @@ def level4(url):
                         agent_index += 1
                     else:
                         agent_index = 0
-
+                    save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y)
                 #  Exit menu
                 if command == 0:
                     playagain = False

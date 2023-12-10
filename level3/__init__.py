@@ -296,6 +296,10 @@ def print_visual_grid(map_data):
 
     return visual_map
 
+def save_image_level3(visual_map, floor_index, grid_start_x, grid_start_y):
+    draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+    pygame.display.update()
+    pygame.image.save(WIN, f'src/images/level3/floor{floor_index}.jpg')
 
 def level3(file):
     map_data = read_file(file)
@@ -378,6 +382,7 @@ def level3(file):
 
                         visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
                         visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
+                    save_image_level3(visual_map, floor_index, grid_start_x, grid_start_y)
 
                 # Go up floor
                 if command == 2:
@@ -386,6 +391,8 @@ def level3(file):
                         floor_index += 1
                     else:
                         floor_index = 0
+                    save_image_level3(visual_map, floor_index, grid_start_x, grid_start_y)
+
                     command = -1
                 # Go down floor
                 if command == 3:
@@ -394,6 +401,7 @@ def level3(file):
                         floor_index -= 1
                     else:
                         floor_index = total_floor - 1
+                    save_image_level3(visual_map, floor_index, grid_start_x, grid_start_y)
                 #  Exit menu
                 if command == 0:
                     playagain = False

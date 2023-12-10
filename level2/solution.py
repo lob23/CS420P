@@ -828,6 +828,11 @@ def level2(url):
                         print("unsolvable")
                         Visualizer.visited = None
                     draw_menu_level2(Visualizer.visited)
+                    draw(WIN, visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
+                         Visualizer.grid_start_y)
+                    pygame.display.update()
+                    pygame.image.save(WIN, f'src/images/level2/level2.jpg' )
+
                     playagain = True
                 elif command == 0:
                     run = False

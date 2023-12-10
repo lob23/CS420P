@@ -315,6 +315,7 @@ def level1(url):
 
         pygame.display.update()
 
+        name_search = 'None'
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -327,15 +328,20 @@ def level1(url):
                     Visualizer.visited_score = 0
                     # print_score(Visualizer.visited_score)
                     problem.is_heuristic = False
+                    name_search = 'DFS'
                     node = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
+                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+
                     play_again = True
                 elif command == 2:
                     Visualizer.visited_score = 0
+                    name_search = 'BFS'
                     problem.is_heuristic = False
                     node = (bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
+                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
 
                     command = -1
                     play_again = True
@@ -343,18 +349,28 @@ def level1(url):
                 elif command == 3:
                     Visualizer.visited_score = 0
                     problem.is_heuristic = False
+                    name_search = 'UCS'
                     node = (ucs(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
+                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+
                     play_again = True
 
                 elif command == 4:
                     Visualizer.visited_score = 0
+                    name_search = 'A_star'
                     problem.is_heuristic = True
                     node = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
+                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+
                     play_again = True
+
+                # elif command == 5:
+                #     command = -1
+                #     pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
         pygame.display.flip()
 
         # pygame.display.update()

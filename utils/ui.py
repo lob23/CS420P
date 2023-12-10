@@ -270,7 +270,7 @@ def draw_menu_level1():
     # txt = font.render('Menus!', True, 'black')
     # WIN.blit(txt, (135, 127))
     # menu exit button
-    exitButton = Button('Exit Menu', (620, 420))
+    exitButton = Button('Exit Menu', (620, 480))
     exitButton.draw()
     button1 = Button('Depth First Search', (620, 180))
     button1.draw()
@@ -280,6 +280,8 @@ def draw_menu_level1():
     button3.draw()
     button4 = Button('A star', (620, 360))
     button4.draw()
+    # button5 = Button('Print heatmap', (620, 420))
+    # button5.draw()
     if exitButton.check_clicked():
         command = 0
     if button1.check_clicked():
@@ -290,6 +292,8 @@ def draw_menu_level1():
         command = 3
     if button4.check_clicked():
         command = 4
+    # if button5.check_clicked():
+    #     command = 5
 
     return command
 
@@ -379,6 +383,7 @@ def draw_menu_level4(total_agent, agent=0, floor=0, visited=0):
     # change agent
     button4 = Button('Change agent heatmap', (620, 360))
     button4.draw()
+    # Save screen
 
     if exitButton.check_clicked():
         command = 0
