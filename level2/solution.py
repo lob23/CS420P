@@ -5,7 +5,7 @@ import math
 import copy
 from collections import deque
 import os.path
-import timeit
+import time
 from utils.ui import *
 
 def memoryMeasyrement():
@@ -558,9 +558,9 @@ class game:
         #     draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
         #          Visualizer.grid_start_y)
         #     pygame.display.update()
-        if path:
-            path.reverse()
-            Visualizer.print_path(path)
+        # if path:
+        #     path.reverse()
+        #     Visualizer.print_path(path)
         return path,mem
         # return finalRoutine
 
@@ -764,13 +764,10 @@ def main():
     # print(gameMap)
     test = game(gameMap=gameMap)
 
-    start = timeit.default_timer()
-
+    
+    start = time.process_time()
     print(len(test.algorithm()))
-
-    stop = timeit.default_timer()
-
-    print('Time: ', stop - start)
+    print('Time: ', 1000.0*( time.process_time() - start))
 
 def level2(url):
     gameMap = convertFileToGrid(url)
@@ -816,15 +813,15 @@ def level2(url):
                 if command == 1:
                     Visualizer.visited = 0
                     test = game(gameMap=gameMap)
-                    start = timeit.default_timer()
+                    
+                    start = time.process_time()
                     result, mem = test.algorithm()
-                    stop = timeit.default_timer()
-                    print('Time: ', stop - start)
-                    print('Memory Consumption: ', mem)
+                    print('Time: ', 1000.0*( time.process_time() - start))
                     if result:
+                        result.reverse()
+                        Visualizer.print_path(result)
                         print("num of steps", len(result))
                     else:
-                        print(result)
                         print("unsolvable")
                         Visualizer.visited = None
                     draw_menu_level2(Visualizer.visited)
