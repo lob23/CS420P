@@ -299,6 +299,7 @@ def print_visual_grid(map_data):
 def save_image_level3(visual_map, floor_index, grid_start_x, grid_start_y):
     draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
     pygame.display.update()
+    is_folder_exists('src/images/level3')
     pygame.image.save(WIN, f'src/images/level3/floor{floor_index}.jpg')
 
 def level3(file):
@@ -376,9 +377,12 @@ def level3(file):
                         for NODE in path:
                             Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_visited()
 
-                            draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+                            # draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
                             pygame.display.update()
-                            pygame.time.delay(10)    
+                            pygame.time.delay(10)
+                            # pygame.time.delay(10)
+
+
 
                             pygame.time.delay(100)
                             draw(WIN, visual_map[NODE[2] - 1], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
