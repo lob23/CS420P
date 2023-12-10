@@ -6,6 +6,7 @@ from queue import Queue, PriorityQueue
 
 from utils.read_file import read_file
 from utils.ui import *
+import time
 
 
 def octile_distance(source, target):
@@ -568,6 +569,7 @@ def level4(url):
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
                 if command == 1:
+                    start = time.process_time()
                     Visualizer.agent_visual[agent_index] = Visualizer.visual_grid
                     # agent_index = 0
                     playagain = True
@@ -576,6 +578,8 @@ def level4(url):
                     visual_map = print_visual_grid(map_data)
                     Visualizer.visual_grid = visual_map
                     solution = mapf(map_data)
+                    print('Time: ', 1000.0*( time.process_time() - start))  
+
                     Visualizer.agent_total = len(solution[0].agents)
                     visual_path(solution)
                     save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y)
