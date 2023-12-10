@@ -2,9 +2,16 @@ from queue import PriorityQueue
 from queue import Queue
 import pygame
 from utils.ui import *
-import math
+import timeit
+import os
+import psutil
 
 from utils.read_file import read_file
+
+def memoryMeasyrement():
+  pid = os.getpid()
+  proc = psutil.Process(pid)
+  return proc.memory_info().rss / (1024 ** 2)
 
 class Visualizer:
     visited_score = 0
@@ -61,6 +68,9 @@ class Problem:
 
 
 def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
+    process = psutil.Process(os.getpid())
+    beginMem = process.memory_info().rss
+    print(beginMem)
     counter = 0
     start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = PriorityQueue()
@@ -68,16 +78,17 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
     explored = set()
     frontier_set = set()
     frontier_set.add(tuple(start_node.position))
+    loop_memory_usage = 0.0
+    memory_usage = beginMem
     while not frontier.empty():
         node = frontier.get()
         frontier_set.remove(tuple(node.position))
         if problem.is_goal(node):
-            visual_grid[node.position[0]][node.position[1]].make_closed()
             print(counter)
+            visual_grid[node.position[0]][node.position[1]].make_closed()
             draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-            return node
+            return node, loop_memory_usage/1000000.0
         explored.add(tuple(node.position))
-        print(frontier.qsize())
         for neighbor in problem.get_neighbors(node, visual_grid, explored):
             if tuple(neighbor.position) not in frontier_set:
                 frontier.put(neighbor)
@@ -89,18 +100,20 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
                         frontier.queue.remove(item)
                         frontier.put(neighbor)
                         neighbor.spot.make_open()
-
-        # Update the spot's color to represent it has been explored
+            memory_usage = max(process.memory_info().rss, memory_usage)
+            loop_memory_usage = memory_usage - beginMem        # Update the spot's color to represent it has been explored
         visual_grid[node.position[0]][node.position[1]].make_closed()
         pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
         counter += 1
     Visualizer.visited_score = None
-    return None
+    return None, loop_memory_usage/1000000.0
 
 
 def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
+    process = psutil.Process(os.getpid())
+    beginMem = process.memory_info().rss
     counter = 0
     start_node = Node(problem.start, problem, 0,None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = Queue()
@@ -109,6 +122,8 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     frontier_set = set()
     frontier_set.add(tuple(start_node.position))
 
+    loop_memory_usage = 0.0
+    memory_usage = beginMem
     while not frontier.empty():
         node = frontier.get()
         frontier_set.remove(tuple(node.position))
@@ -116,7 +131,7 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
             visual_grid[node.position[0]][node.position[1]].make_path()
             print(counter)
             draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-            return node
+            return node, loop_memory_usage/1000000.0
 
         explored.add(tuple(node.position))
 
@@ -131,47 +146,59 @@ def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
             #             frontier.queue.remove(item)
             #             frontier.put(neighbor)
             #             neighbor.spot.make_open()
-
+            memory_usage = max(process.memory_info().rss, memory_usage)
+            loop_memory_usage = memory_usage - beginMem
         counter += 1
         visual_grid[node.position[0]][node.position[1]].make_closed()
         pygame.time.delay(10)
 
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
+
     Visualizer.visited_score = None
-    return None
+    return None, loop_memory_usage/1000000.0
 
 
 def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
+    process = psutil.Process(os.getpid())
+    beginMem = process.memory_info().rss
     counter = 0
     start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = [start_node]
     explored = set()
     frontier_set = set()
     frontier_set.add(tuple(start_node.position))
+    
+    loop_memory_usage = 0.0
+    memory_usage = beginMem
     while len(frontier) != 0:
+        memory_usage = max(process.memory_info().rss, memory_usage)
+        loop_memory_usage = memory_usage - beginMem  
         node = frontier.pop()
         frontier_set.remove(tuple(node.position))
         if problem.is_goal(node):
             print(counter)
-            return node
+            return node,  loop_memory_usage/1000000.0
         explored.add(tuple(node.position))
         node.spot.make_closed()
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
 
         for neighbor in problem.get_neighbors(node, visual_grid, explored):
+            memory_usage = max(process.memory_info().rss, memory_usage)
+            loop_memory_usage = memory_usage - beginMem  
             if tuple(neighbor.position) not in frontier_set:
                 frontier.append(neighbor)
                 neighbor.spot.make_open()
                 frontier_set.add(tuple(neighbor.position))
         counter += 1
         pygame.time.delay(10)
-
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
     Visualizer.visited_score = None
-    return None
+    return None, loop_memory_usage/1000000.0
 
 
 def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
+    process = psutil.Process(os.getpid())
+    beginMem = process.memory_info().rss
     counter = 0
     start_node = Node(problem.start, problem, 0,None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = PriorityQueue()
@@ -179,13 +206,15 @@ def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     frontier.put(start_node)
     frontier_set = set()
     frontier_set.add(tuple(start_node.position))
+    loop_memory_usage = 0.0
+    memory_usage = beginMem
     while not frontier.empty():
         node = frontier.get()
         frontier_set.remove(tuple(node.position))
         if problem.is_goal(node):
             print(counter)
             draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
-            return node
+            return node, loop_memory_usage/1000000.0
         explored.add(tuple(node.position))
         node.spot.make_closed()
         for neighbor in problem.get_neighbors(node, visual_grid, explored):
@@ -199,13 +228,13 @@ def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
                         frontier.queue.remove(item)
                         frontier.put(neighbor)
                         neighbor.spot.make_open()
-
+            memory_usage = max(process.memory_info().rss, memory_usage)
+            loop_memory_usage = memory_usage - beginMem        
         counter += 1
         pygame.time.delay(10)
-
         draw(WIN, visual_grid, rows, columns, WIDTH, grid_start_x, grid_start_y)
     Visualizer.visited_score = None
-    return None
+    return None, loop_memory_usage/1000000.0
 
 
 def print_path(node):
@@ -317,14 +346,22 @@ def level1(url):
                 elif command == 1:
                     Visualizer.visited_score = 0
                     problem.is_heuristic = False
-                    node = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
+                    start = timeit.default_timer()
+                    node, memory = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
+                    stop = timeit.default_timer()
+                    print('Time: ', stop - start)
+                    print('Memory consumption: ', memory)
                     print_path(node)
                     command = -1
                     play_again = True
                 elif command == 2:
                     Visualizer.visited_score = 0
                     problem.is_heuristic = False
-                    node = (bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    start = timeit.default_timer()
+                    node, memory = (bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    stop = timeit.default_timer()
+                    print('Time: ', stop - start)
+                    print('Memory consumption: ', memory)
                     print_path(node)
                     command = -1
                     play_again = True
@@ -332,14 +369,23 @@ def level1(url):
                 elif command == 3:
                     Visualizer.visited_score = 0
                     problem.is_heuristic = False
-                    print_path(ucs(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    start = timeit.default_timer()
+                    path, memory = ucs(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
+                    stop = timeit.default_timer()
+                    print('Time: ', stop - start)
+                    print('Memory consumption: ', memory)
+                    print_path(path)
                     command = -1
                     play_again = True
 
                 elif command == 4:
                     Visualizer.visited_score = 0
                     problem.is_heuristic = True
-                    node = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    start = timeit.default_timer()
+                    node, memory = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
+                    stop = timeit.default_timer()
+                    print('Time: ', stop - start)
+                    print('Memory consumption: ', memory)
                     print_path(node)
                     command = -1
                     play_again = True

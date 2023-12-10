@@ -33,7 +33,7 @@ def main():
                     count += 1
                     print(count)
                 elif menu_command == 4:
-                    level4('level4/test.txt')
+                    level4('src/maps/input.txt')
                     print("level 4")
 
 

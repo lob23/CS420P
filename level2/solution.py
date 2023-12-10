@@ -123,23 +123,24 @@ class game:
 
     def findDoor_ver2(self, pos):
         beginMem = memoryMeasyrement()
+        continuous = beginMem
         frontier = Queue()
         frontier.put((pos, ()))
         explored = set()
         exploredOrder = []
         route = {}
         route[tuple((pos, ()))] = None
+        loop = 0.0
         
         while(frontier):
+        
             try:
                 node = frontier.get_nowait()
             except:
-                return None, beginMem
+                return None, loop/1000000.0
+            continuous = max(memoryMeasyrement(), continuous)
+            loop = continuous - beginMem
             
-            if(node[0] == self.goal):
-                res = self.tree_optain(route, node)
-                return res, beginMem
-                
             if(tuple(node) in explored):
                 continue
             explored.add(node)
@@ -149,6 +150,9 @@ class game:
                 
                 if child in self.doors and tuple(self.doors[child]) not in node[1]:
                     continue
+                if(node[0] == self.goal):
+                    res = self.tree_optain(route, node)
+                    return res, loop/1000000.0
                 if child in self.keys.values() and child not in node[1]:
                     key_list = list(copy.deepcopy(node[1]))
                     key_list.append(child)
@@ -162,9 +166,8 @@ class game:
                     if(tuple((child, node[1])) in route):
                         continue
                     route[tuple((child, node[1]))] = node
-
             # pygame.display.update()
-        return None, beginMem
+        return None, loop/1000000.0
                 
                 
     
@@ -558,7 +561,7 @@ class game:
         if path:
             path.reverse()
             Visualizer.print_path(path)
-        return path
+        return path,mem
         # return finalRoutine
 
     def getRoutine(self, routine, path):
@@ -814,12 +817,12 @@ def level2(url):
                     Visualizer.visited = 0
                     test = game(gameMap=gameMap)
                     start = timeit.default_timer()
-                    result = test.algorithm()
+                    result, mem = test.algorithm()
                     stop = timeit.default_timer()
                     print('Time: ', stop - start)
-
+                    print('Memory Consumption: ', mem)
                     if result:
-                        print(len(result))
+                        print("num of steps", len(result))
                     else:
                         print(result)
                         print("unsolvable")

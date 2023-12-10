@@ -365,7 +365,12 @@ def level3(file):
                         stop = timeit.default_timer()
                         print('Time: ', stop - start)
                         for NODE in path:
-                            Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
+                            Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_visited()
+                            draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+                            pygame.display.update()
+                            pygame.time.delay(10)
+
+                            
                         visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
                         visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
 
