@@ -301,9 +301,9 @@ class Agent:
                 return 1
         return 2
 
-    def get_out_of_the_way(self, cell):
-        self.path.insert(1, (None, cell[0], cell[1], cell[2]))
-        self.path.insert(2, self.path[0])
+    def get_out_of_the_way(self, position, cell):
+        self.path.insert(position + 1, (None, cell[0], cell[1], cell[2]))
+        self.path.insert(position + 2, self.path[position])
 
     def __str__(self):
         return self.start + " " + str(self.cell())

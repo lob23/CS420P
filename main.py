@@ -68,6 +68,7 @@ def main():
                     print(count)
                 elif menu_command == 4:
                     level4(url)
+                    level4('level4/test.txt')
                     print("level 4")
                 elif menu_command == 5:
                     url = get_file()
