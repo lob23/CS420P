@@ -1,6 +1,8 @@
 # Desc: UI utilities
 import pygame
 
+# from level4.__init__ import Visualizer as Visualizerlv4
+
 WIDTH = 600
 WIN = pygame.display.set_mode((WIDTH + 300, WIDTH))
 pygame.display.set_caption("Path Finding")
@@ -31,7 +33,7 @@ INDIGO = (75, 0, 130)
 # More colors
 
 
-agent_color = [INDIGO, GOLD, BROWN, MAROON]
+agent_color = [TEAL, TEAL, TURQUOISE, GREY, MAROON]
 
 
 class UI:
@@ -103,7 +105,7 @@ class Spot:
 
     def make_visited(self):
         self.num_visited += 1
-        self.color = self.get_heatmap_color(self.num_visited / 7)
+        self.color = self.get_heatmap_color(self.num_visited / 20)
 
     def make_visited_key_door(self):
         self.color = LIME
@@ -343,6 +345,49 @@ def draw_menu_level3(floor=0, visited=0):
         command = 3
     # if button4.check_clicked():
     #     command = 4
+
+    return command
+
+
+def change_agent_and_redraw(grid, grid_start_x, grid_start_y):
+    draw(WIN, grid, len(grid), len(grid[0]), WIDTH, grid_start_x, grid_start_y)
+
+
+def draw_menu_level4(total_agent, agent=0, floor=0, visited=0):
+    global agent_txt
+    WIN.fill('white')
+    command = -1
+    exitButton = Button('Exit Menu', (620, 420))
+    exitButton.draw()
+    floortxt = font.render(f'Current Floor {floor}', True, 'black')
+    WIN.blit(floortxt, (620, 127))
+    if total_agent >=  agent:
+        agent_txt = font.render(f'Agent: {agent }', True, 'black')
+    elif total_agent == 0:
+        agent_txt = font.render(f'Agent: Print path', True, 'black')
+    WIN.blit(agent_txt, (620, 67))
+    button1 = Button('Search', (620, 180))
+    button1.draw()
+    # Go up floor
+    button2 = Button('Go up floor', (620, 240))
+    button2.draw()
+    # Go down floor
+    button3 = Button('Go down floor', (620, 300))
+    button3.draw()
+    # change agent
+    button4 = Button('Change agent heatmap', (620, 360))
+    button4.draw()
+
+    if exitButton.check_clicked():
+        command = 0
+    if button1.check_clicked():
+        command = 1
+    if button2.check_clicked():
+        command = 2
+    if button3.check_clicked():
+        command = 3
+    if button4.check_clicked():
+        command = 4
 
     return command
 

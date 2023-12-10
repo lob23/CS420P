@@ -7,6 +7,7 @@ from queue import Queue, PriorityQueue
 from utils.read_file import read_file
 from utils.ui import *
 
+
 def octile_distance(source, target):
     dx = abs(source[0] - target[0])
     dy = abs(source[1] - target[1])
@@ -30,7 +31,8 @@ class Visualizer:
     grid_start_x = None
     grid_start_y = None
     visited_score = 0
-
+    agent_visual = {}
+    agent_total = 0
 
 
 class Dnode:
@@ -299,9 +301,9 @@ class Agent:
                 return 1
         return 2
 
-    def get_out_of_the_way(self, position, cell):
-        self.path.insert(position + 1, (None, cell[0], cell[1], cell[2]))
-        self.path.insert(position + 2, self.path[0])
+    def get_out_of_the_way(self, cell):
+        self.path.insert(1, (None, cell[0], cell[1], cell[2]))
+        self.path.insert(2, self.path[0])
 
     def __str__(self):
         return self.start + " " + str(self.cell())
@@ -358,19 +360,31 @@ class Anode:
     def reconstruct_path(self):
         path = []
         node = self
+        Visualizer.agent_visual[0] = Visualizer.visual_grid
+        for agent in node.agents:
+            Visualizer.agent_visual[int(agent.start[1:])] = copy.deepcopy(Visualizer.visual_grid)
         while node is not None:
-            Visualizer.visited_score += 1
-            for i in range(Anode.n):
-                pygame.time.wait(100)
-                draw_menu_level3(node.agents[i].cell()[2] - 1)
-                draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
-                     Visualizer.grid_start_x,
-                     Visualizer.grid_start_y)
-                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
-                pygame.display.update()
             path.append(node)
             node = node.parent
         return path[::-1]
+
+
+def visual_path(path):
+    for node in path:
+        for i in range(Anode.n):
+            for agent in node.agents:
+                Visualizer.agent_visual[int(agent.start[1:])][agent.cell()[2] - 1][agent.cell()[0]][
+                    agent.cell()[1]].make_visited()
+            Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][
+                node.agents[i].cell()[1]].make_path()
+            draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
+                 Visualizer.grid_start_x,
+                 Visualizer.grid_start_y)
+            pygame.display.update()
+        pygame.time.wait(100)
+    num_agent = len(path[0].agents)
+    len_path = len(path)
+    Visualizer.visited_score = num_agent * len_path
 
 
 def prevent_deadlock(agents):
@@ -399,16 +413,20 @@ def prevent_deadlock(agents):
                     if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x, y + 1, z))
                         break
-                    if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
+                    if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (
+                    x - 1, y - 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x - 1, y - 1, z))
                         break
-                    if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
+                    if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][
+                        y - 1] == "0" and (x + 1, y - 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x + 1, y - 1, z))
                         break
-                    if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] == "0" and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
+                    if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] == "0" and \
+                            grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x + 1, y + 1, z))
                         break
-                    if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] == "0" and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
+                    if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] == "0" and grid[x - 1][
+                        y + 1] == "0" and (x - 1, y + 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x - 1, y + 1, z))
                         break
 
@@ -448,6 +466,7 @@ def mapf(map_data):
                     frontier.queue.pop(index)
                     frontier.put(child)
     return None
+
 
 def print_visual_grid(map_data):
     visual_map = []
@@ -500,18 +519,22 @@ def level4(url):
     floor_index = 0
     total_floor = len(visual_map)
     Visualizer.visual_grid = visual_map
-
+    agent_index = 0
+    Visualizer.agent_visual[agent_index] = Visualizer.visual_grid
 
     while run:
         # Draw the visualizer
-        command = draw_menu_level3(floor_index)
+        command = draw_menu_level4(Visualizer.agent_total, agent_index, floor_index)
         if playagain:
             playagain = False
             Visualizer.visual_grid = print_visual_grid(map_data)
 
         print_score(Visualizer.visited_score)
 
-        draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+        # change_agent_and_redraw(Visualizer.agent_visual[agent_index], grid_start_x, grid_start_y)
+
+        change_agent_and_redraw(Visualizer.agent_visual[agent_index][floor_index], grid_start_x, grid_start_y)
+        # draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
         pygame.display.update()
 
         for event in pygame.event.get():
@@ -521,12 +544,16 @@ def level4(url):
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
                 if command == 1:
+                    Visualizer.agent_visual[agent_index] = Visualizer.visual_grid
+                    # agent_index = 0
                     playagain = True
                     Visualizer.visited_score = 0
                     map_data = read_file(url)
                     visual_map = print_visual_grid(map_data)
                     Visualizer.visual_grid = visual_map
                     solution = mapf(map_data)
+                    Visualizer.agent_total = len(solution[0].agents)
+                    visual_path(solution)
 
                 # Go up floor
                 if command == 2:
@@ -544,21 +571,24 @@ def level4(url):
                     else:
                         floor_index = total_floor - 1
 
+                if command == 4:
+                    playagain = False
+                    if agent_index < len(Visualizer.agent_visual) - 1:
+                        agent_index += 1
+                    else:
+                        agent_index = 0
+
                 #  Exit menu
                 if command == 0:
                     playagain = False
                     run = False
 
-
+            pygame.time.wait(100)
             pygame.display.flip()
 
 
-
-
-
-
 def test():
-    map_data = read_file('level4/test.txt')
+    map_data = read_file('test.txt')
     solution = mapf(map_data)
 
     for e in solution:

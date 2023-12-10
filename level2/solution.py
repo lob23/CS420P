@@ -826,6 +826,7 @@ def level2(url):
                     else:
                         print(result)
                         print("unsolvable")
+                        Visualizer.visited = None
                     draw_menu_level2(Visualizer.visited)
                     playagain = True
                 elif command == 0:
