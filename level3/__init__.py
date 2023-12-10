@@ -199,7 +199,6 @@ class Pnode:
                     Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
-                print(visited)
                 Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                 for child in current_node.children():
                     index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
@@ -353,14 +352,18 @@ def level3(file):
                 if command == 1:
                     Visualizer.visited_score = 0
                     playagain = True
+                    start = timeit.default_timer()
                     DTREE = find_dtree(map_data)
+                
                     if DTREE is None:
                         Visualizer.visited_score = None
                     else:
-                        for NODE in DTREE:
-                            print(NODE.name)
-                        print()
+                        # for NODE in DTREE:
+                        #     print(NODE.name)
+                        # print()
                         path = find_path(map_data, DTREE)
+                        stop = timeit.default_timer()
+                        print('Time: ', stop - start)
                         for NODE in path:
                             Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
                         visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()

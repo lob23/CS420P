@@ -44,11 +44,9 @@ class Visualizer:
         Visualizer.visual_map[path[0][0]][path[0][1]].make_start()
         for i in range(1, len(path)):
             Visualizer.visual_map[path[i][0]][path[i][1]].make_visited()
-            pygame.time.wait(10)
             draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
                  Visualizer.grid_start_y)
             pygame.display.update()
-            print(path[i][0], path[i][1])
         Visualizer.visual_map[path[-1][0]][path[-1][1]].make_visited()
         Visualizer.visited = len(path)
 
@@ -123,56 +121,56 @@ class game:
     #     if(isOpen[0] == True):
     #         return None   
 
-    def findDoor_ver2(self, pos, taken, tracker):
+    def findDoor_ver2(self, pos):
         beginMem = memoryMeasyrement()
-        frontier = PriorityQueue()
-        frontier.put((0, (pos, ())))
-        
+        frontier = Queue()
+        frontier.put((pos, ()))
         explored = set()
-        
+        exploredOrder = []
         route = {}
         route[tuple((pos, ()))] = None
         
         while(frontier):
             try:
-                cost, node = frontier.get_nowait()
+                node = frontier.get_nowait()
             except:
                 return None, beginMem
+            
+            if(node[0] == self.goal):
+                res = self.tree_optain(route, node)
+                return res, beginMem
+                
             if(tuple(node) in explored):
                 continue
             explored.add(node)
+
             children = self.get_neighbors(node[0])
             for child in children:
- 
-                if(child == self.goal):
-                    route[tuple(child)] = node 
-                    res = self.tree_optain(route)
-                    return res, beginMem
+                
                 if child in self.doors and tuple(self.doors[child]) not in node[1]:
                     continue
                 if child in self.keys.values() and child not in node[1]:
                     key_list = list(copy.deepcopy(node[1]))
                     key_list.append(child)
-                    frontier.put((cost + 1, (child, tuple(key_list))))
+                    frontier.put((child, tuple(key_list)))
                     if(tuple((child, tuple(key_list))) in route):
                         continue
                     route[tuple((child, tuple(key_list)))] = node
+                    continue
                 if(child, node[1]) not in explored:
-                    frontier.put((cost + 1, (child, node[1])))
+                    frontier.put((child, node[1]))
                     if(tuple((child, node[1])) in route):
                         continue
                     route[tuple((child, node[1]))] = node
-            beginMem = max(beginMem, memoryMeasyrement()) 
-            # draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
-            #    Visualizer.grid_start_y)
+
             # pygame.display.update()
         return None, beginMem
                 
                 
     
-    def tree_optain(self, route):
+    def tree_optain(self, route, node):
         pack = []
-        node = route[self.goal]
+        node = route[node]
         while node != None:
             pack.append(node[0])
             node = route[node]
@@ -508,19 +506,10 @@ class game:
         if (isSolvable == False):
             print("unSolvable")
             return None
-
-        door_position = []
-        door_position_list = {}
-
-        path_graph = {}
-
         # list = self.exploreDoor(door_list=door_position_list, door=[self.goal])
         # print(list)
-        tracker = []
-        tracker.append(self.agent)
-        taken = []
         
-        path, mem = self.findDoor_ver2(self.agent, taken, tracker)
+        path, mem = self.findDoor_ver2(self.agent)
 
         # routine = {}
         # path, subroutine = self.findDoor(self.goal)
@@ -561,6 +550,11 @@ class game:
         #     return None
         # print(finalRoutine)
         # # Print final routine to the screen
+        # for explore in explored:
+        #     Visualizer.visual_map[explore[0]][explore[1]].make_visited_key_door()
+        #     draw(WIN, Visualizer.visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
+        #          Visualizer.grid_start_y)
+        #     pygame.display.update()
         if path:
             path.reverse()
             Visualizer.print_path(path)
