@@ -265,8 +265,12 @@ class Agent:
         self.__current = current
         if self.path is None:
             dtree = find_dtree(Agent.map_data, self.start, self.goal)
-            self.keys = dtree[-1].keys
-            self.path = find_path(Agent.map_data, dtree)
+            if dtree is None:
+                self.keys = None
+                self.path = [(start, Agent.map_data['atkds'][start][0], Agent.map_data['atkds'][start][1], Agent.map_data['atkds'][start][2])]
+            else:
+                self.keys = dtree[-1].keys
+                self.path = find_path(Agent.map_data, dtree)
 
     def cell(self):
         return self.path[self.__current][1], self.path[self.__current][2], self.path[self.__current][3]
@@ -275,6 +279,8 @@ class Agent:
         return Agent(self.start, self.goal, self.path.copy(), self.__current, self.keys.copy())
 
     def move(self, agents):
+        if self.path is None:
+            return 0
         if self.__current < len(self.path) - 1:
             self.__current += 1
             for agent in agents:
@@ -397,6 +403,8 @@ def visual_path(path):
 def prevent_deadlock(agents):
     a1_path = set([cell[1:] for cell in agents[0].path])
     for i in range(1, len(agents)):
+        if agents[i].path is None:
+            continue
         ai_path = set([cell[1:] for cell in agents[i].path])
         intersection = a1_path.intersection(ai_path)
         union = a1_path.union(ai_path)
