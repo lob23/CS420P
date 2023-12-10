@@ -365,6 +365,8 @@ def level3(file):
                 
                     if DTREE is None:
                         Visualizer.visited_score = None
+                        print('Time: ', 1000.0*( time.process_time() - start))  
+
                     else:
                         # for NODE in DTREE:
                         #     print(NODE.name)
@@ -376,9 +378,7 @@ def level3(file):
 
                             draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
                             pygame.display.update()
-                            pygame.time.delay(10)
-
-                            
+                            pygame.time.delay(10)    
 
                             pygame.time.delay(100)
                             draw(WIN, visual_map[NODE[2] - 1], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
