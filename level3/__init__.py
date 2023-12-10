@@ -1,8 +1,8 @@
 import heapq
 import math
 import re
-import timeit
 from queue import Queue, PriorityQueue
+import time
 
 import pygame
 
@@ -359,7 +359,8 @@ def level3(file):
                     # pygame.display.update()
                     Visualizer.visited_score = 0
                     playagain = True
-                    start = timeit.default_timer()
+                    start = time.process_time()
+
                     DTREE = find_dtree(map_data)
                 
                     if DTREE is None:
@@ -369,8 +370,7 @@ def level3(file):
                         #     print(NODE.name)
                         # print()
                         path = find_path(map_data, DTREE)
-                        stop = timeit.default_timer()
-                        print('Time: ', stop - start)
+                        print('Time: ', 1000.0*( time.process_time() - start))  
                         for NODE in path:
                             Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_visited()
 
@@ -422,13 +422,13 @@ def test():
     map_data = read_file('./level3/test.txt')
     Boundary.N = map_data[f'floor{1}']['height']
     Boundary.M = map_data[f'floor{1}']['width']
-    start = timeit.default_timer()
+    #start = timeit.default_timer()
     dtree = find_dtree(map_data)
     for e in dtree:
         print(e, end=" ")
     print()
     path = find_path(map_data, dtree)
     print(path)
-    stop = timeit.default_timer()
-    print('Time: ', stop - start)
+    #stop = timeit.default_timer()
+    #print('Time: ', stop - start)
 

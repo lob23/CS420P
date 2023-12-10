@@ -83,9 +83,6 @@ def main():
                     # level4('level4/test.txt')
                     print("level 4")
                     
-                
-                    
-
         pygame.time.delay(100)
         pygame.display.flip()
 
