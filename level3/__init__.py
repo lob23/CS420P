@@ -354,6 +354,9 @@ def level3(file):
             if pygame.MOUSEBUTTONDOWN:
                 # Run search algorithm
                 if command == 1:
+                    visual_map = Visualizer.visual_grid
+                    # draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
+                    # pygame.display.update()
                     Visualizer.visited_score = 0
                     playagain = True
                     start = timeit.default_timer()
