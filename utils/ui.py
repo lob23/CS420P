@@ -361,10 +361,12 @@ def draw_menu_level4(total_agent, agent=0, floor=0, visited=0):
     exitButton.draw()
     floortxt = font.render(f'Current Floor {floor}', True, 'black')
     WIN.blit(floortxt, (620, 127))
-    if total_agent >=  agent:
-        agent_txt = font.render(f'Agent: {agent }', True, 'black')
-    elif total_agent == 0:
+    if agent == 0:
         agent_txt = font.render(f'Agent: Print path', True, 'black')
+
+    elif total_agent >= agent:
+        agent_txt = font.render(f'Agent: {agent }', True, 'black')
+
     WIN.blit(agent_txt, (620, 67))
     button1 = Button('Search', (620, 180))
     button1.draw()

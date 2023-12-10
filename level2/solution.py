@@ -832,7 +832,7 @@ def level2(url):
                 elif command == 0:
                     run = False
                     return
-        pygame.time.delay(100)
+        pygame.time.delay(10)
         pygame.display.flip()
 
 # Astar
