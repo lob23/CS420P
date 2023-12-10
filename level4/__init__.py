@@ -377,6 +377,9 @@ class Anode:
 
 
 def visual_path(path):
+    if len(path) == 1:
+        Visualizer.visited_score = None
+        return
     for node in path:
         for i in range(Anode.n):
             for agent in node.agents:
