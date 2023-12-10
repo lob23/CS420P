@@ -196,10 +196,10 @@ class Pnode:
             if current_node.value not in visited:
                 if current_node.value == Pnode.vgoal:
                     # print the visited node to the screen
-                    Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
+                    # Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                     return current_node.reconstruct_path()
                 visited.add(current_node.value)
-                Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
+                # Visualizer.visual_grid[Pnode.level - 1][current_node.value[0]][current_node.value[1]].make_visited()
                 for child in current_node.children():
                     index = next((i for i, e in enumerate(frontier.queue) if e.value == child.value), -1)
                     if child.value not in visited and index == -1:
@@ -211,8 +211,8 @@ class Pnode:
 
             # pygame.time.delay(100)
             # redraw the screen
-            draw_menu_level3(Pnode.level - 1)
-            draw(WIN, Visualizer.visual_grid[Pnode.level - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
+            # draw_menu_level3(Pnode.level - 1)
+            # draw(WIN, Visualizer.visual_grid[Pnode.level - 1], Boundary.N, Boundary.M, WIDTH, Visualizer.grid_start_x, Visualizer.grid_start_y)
         Visualizer.visited = None
         return None
 
@@ -365,7 +365,9 @@ def level3(file):
                         stop = timeit.default_timer()
                         print('Time: ', stop - start)
                         for NODE in path:
-                            Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_path()
+                            Visualizer.visual_grid[NODE[2] - 1][NODE[0]][NODE[1]].make_visited()
+                            pygame.time.delay(100)
+                            draw(WIN, visual_map[NODE[2] - 1], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
                         visual_map[start_node[2] - 1][start_node[0]][start_node[1]].make_start()
                         visual_map[end_node[2] - 1][end_node[0]][end_node[1]].make_end()
 
