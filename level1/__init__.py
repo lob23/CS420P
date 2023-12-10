@@ -381,6 +381,8 @@ def level1(url):
                 #     command = -1
                 #     pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
         pygame.display.flip()
+        pygame.time.delay(100)
+
 
         # pygame.display.update()
 

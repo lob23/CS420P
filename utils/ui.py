@@ -1,5 +1,6 @@
 # Desc: UI utilities
 import pygame
+import os
 
 # from level4.__init__ import Visualizer as Visualizerlv4
 
@@ -146,7 +147,7 @@ class Spot:
         pygame.draw.rect(win, self.color, (self.x + grid_start_x, self.y + grid_start_y, self.width, self.width))
 
         if self.name is not None:
-            font_scale = pygame.font.SysFont('freesansbold', int((UI.gap / 25) * 24))
+            font_scale = pygame.font.SysFont('freesansbold', int((UI.gap / 30) * 24))
             text = font_scale.render(self.name, True, 'black')
             #     the text align center
             WIN.blit(text, (self.x + grid_start_x + 2, self.y + grid_start_y + 2))
@@ -330,7 +331,7 @@ def draw_menu_level3(floor=0, visited=0):
     command = -1
     exitButton = Button('Exit Menu', (620, 420))
     exitButton.draw()
-    floortxt = font.render(f'Current Floor {floor}', True, 'black')
+    floortxt = font.render(f'Current Floor {floor + 1}', True, 'black')
     WIN.blit(floortxt, (620, 127))
     # visitedtxt = font.render(f'Score {100 - visited}', True, 'black')
     # WIN.blit(visitedtxt, (620, 97))
@@ -367,10 +368,10 @@ def draw_menu_level4(total_agent, agent=0, floor=0, visited=0):
     command = -1
     exitButton = Button('Exit Menu', (620, 420))
     exitButton.draw()
-    floortxt = font.render(f'Current Floor {floor}', True, 'black')
+    floortxt = font.render(f'Current Floor {floor + 1}', True, 'black')
     WIN.blit(floortxt, (620, 127))
     if agent == 0:
-        agent_txt = font.render(f'Agent: Print path', True, 'black')
+        agent_txt = font.render(f'Agent: Multi-agent', True, 'black')
 
     elif total_agent >= agent:
         agent_txt = font.render(f'Agent: {agent }', True, 'black')
