@@ -301,8 +301,8 @@ class Agent:
                         Agent.map_data['atkds'].update({self.goal: (x, y, z)})
                         Agent.map_data[f'floor{z}']['floor_data'][x][y] = self.goal
                         self.__current = 0
-                        self.path = find_path(Agent.map_data,
-                                              find_dtree(Agent.map_data, self.start, self.goal, self.keys))
+                        dtree = find_dtree(Agent.map_data, self.start, self.goal, self.keys)
+                        self.path = None if dtree is None else find_path(Agent.map_data, dtree)
                         break
                 return 1
         return 2
