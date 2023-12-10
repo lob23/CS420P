@@ -828,6 +828,7 @@ def level2(url):
                     draw(WIN, visual_map, Visualizer.rows, Visualizer.columns, WIDTH, Visualizer.grid_start_x,
                          Visualizer.grid_start_y)
                     pygame.display.update()
+                    is_folder_exists('src/images/level2')
                     pygame.image.save(WIN, f'src/images/level2/level2.jpg' )
 
                     playagain = True

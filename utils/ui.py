@@ -265,6 +265,11 @@ def draw_menu():
     return command
 
 
+def is_folder_exists(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
 def draw_menu_level1():
     WIN.fill('white')
     command = -1
@@ -374,7 +379,7 @@ def draw_menu_level4(total_agent, agent=0, floor=0, visited=0):
         agent_txt = font.render(f'Agent: Multi-agent', True, 'black')
 
     elif total_agent >= agent:
-        agent_txt = font.render(f'Agent: {agent }', True, 'black')
+        agent_txt = font.render(f'Agent: {agent}', True, 'black')
 
     WIN.blit(agent_txt, (620, 67))
     button1 = Button('Search', (620, 180))

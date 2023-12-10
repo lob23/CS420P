@@ -514,7 +514,7 @@ def save_image_level4( floor_index, agent_index, grid_start_x, grid_start_y):
     pygame.display.update()
     if agent_index == 0:
         agent_index = '_print_path'
-
+    is_folder_exists('src/images/level4')
     pygame.image.save(WIN, f'src/images/level4/floor{floor_index}_agent{agent_index}.jpg')
 
 

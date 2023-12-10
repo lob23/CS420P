@@ -7,8 +7,10 @@ import time
 
 from utils.read_file import read_file
 
+
 class Visualizer:
     visited_score = 0
+
 
 class Node:
     def __init__(self, position, problem, cost=0, parent=None, spot=None):
@@ -29,7 +31,6 @@ class Problem:
         self.goal = goal
         self.is_heuristic = is_heuristic
 
-
     def get_neighbors(self, node, visual_grid, explored):
         directions = [(0, 1), (1, 0), (-1, 0), (0, -1)]
         diagonal_directions = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
@@ -37,11 +38,13 @@ class Problem:
 
         for dx, dy in directions:
             x, y = node.position[0] + dx, node.position[1] + dy
-            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1' and tuple((x,y)) not in explored:
+            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1' and tuple(
+                    (x, y)) not in explored:
                 neighbors.append(Node((x, y), self, node.cost + 1, node, visual_grid[x][y]))
         for dx, dy in diagonal_directions:
             x, y = node.position[0] + dx, node.position[1] + dy
-            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1' and tuple((x,y)) not in explored:
+            if 0 <= x < len(self.grid) and 0 <= y < len(self.grid[0]) and self.grid[x][y] != '-1' and tuple(
+                    (x, y)) not in explored:
                 if self.grid[x][node.position[1]] != '-1' and self.grid[node.position[0]][y] != '-1':
                     neighbors.append(Node((x, y), self, node.cost + 1, node, visual_grid[x][y]))
         return neighbors
@@ -102,7 +105,7 @@ def a_star_search(problem, visual_grid, grid_start_x, grid_start_y, rows, column
 
 def bfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     counter = 0
-    start_node = Node(problem.start, problem, 0,None, visual_grid[problem.start[0]][problem.start[1]])
+    start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = Queue()
     frontier.put(start_node)
     explored = set()
@@ -173,7 +176,7 @@ def dfs_search(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
 
 def ucs(problem, visual_grid, grid_start_x, grid_start_y, rows, columns):
     counter = 0
-    start_node = Node(problem.start, problem, 0,None, visual_grid[problem.start[0]][problem.start[1]])
+    start_node = Node(problem.start, problem, 0, None, visual_grid[problem.start[0]][problem.start[1]])
     frontier = PriorityQueue()
     explored = set()
     frontier.put(start_node)
@@ -232,6 +235,7 @@ def print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN):
     Visualizer.visited_score = counter
     return
 
+
 def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
     visual_grid = make_grid(ROWS, COLUMN, WIDTH)
 
@@ -242,18 +246,6 @@ def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
 
     row_index = 0
     for line in grid:
-    #     # if 'A1' in line:
-    #     #     start_position_column = line.index('A1')
-    #     #     start_position = (row_index, start_position_column)
-    #     #     grid[row_index][start_position_column] = '0'
-    #     #     visual_grid[row_index][start_position_column].make_start()
-    #     #
-    #     # if 'T1' in line:
-    #     #     start_position_column = line.index('T1')
-    #     #     goal_position = (row_index, start_position_column)
-    #     #     grid[row_index][start_position_column] = '0'
-    #     #     visual_grid[row_index][start_position_column].make_end()
-    #
         for column_index, cell in enumerate(line):
             if cell == '-1':
                 visual_grid[row_index][column_index].make_barrier()
@@ -262,15 +254,20 @@ def print_grid(ROWS, COLUMN, grid, start_position=None, goal_position=None):
     return visual_grid
 
 
+def save_image(name_search):
+    is_folder_exists('src/images/level1')
+    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg')
+
+
 def level1(url):
     # Example usage
     file = read_file(url)
     print(file)
     ROWS = file['floor1']['height']
     COLUMN = file['floor1']['width']
-    x,y,z = file['atkds']['A1']
+    x, y, z = file['atkds']['A1']
     start_position = (x, y)
-    x,y,z = file['atkds']['T1']
+    x, y, z = file['atkds']['T1']
     goal_position = (x, y)
 
     # visual_grid = make_grid(ROWS, COLUMN, WIDTH)
@@ -333,10 +330,10 @@ def level1(url):
                     name_search = 'DFS'
                     start = time.process_time()
                     node = dfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
-                    print('Time: ', 1000.0*( time.process_time() - start))
+                    print('Time: ', 1000.0 * (time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
-                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+                    save_image(name_search)
 
                     play_again = True
                 elif command == 2:
@@ -345,9 +342,9 @@ def level1(url):
                     problem.is_heuristic = False
                     start = time.process_time()
                     node = bfs_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
-                    print('Time: ', 1000.0*( time.process_time() - start))
+                    print('Time: ', 1000.0 * (time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
-                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+                    save_image(name_search)
 
                     command = -1
                     play_again = True
@@ -358,10 +355,10 @@ def level1(url):
                     name_search = 'UCS'
                     start = time.process_time()
                     node = (ucs(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
-                    print('Time: ', 1000.0*( time.process_time() - start))
+                    print('Time: ', 1000.0 * (time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
-                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+                    save_image(name_search)
 
                     play_again = True
 
@@ -371,10 +368,10 @@ def level1(url):
                     problem.is_heuristic = True
                     start = time.process_time()
                     node = (a_star_search(problem, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN))
-                    print('Time: ', 1000.0*( time.process_time() - start))
+                    print('Time: ', 1000.0 * (time.process_time() - start))
                     print_path(node, visual_grid, grid_start_x, grid_start_y, ROWS, COLUMN)
                     command = -1
-                    pygame.image.save(WIN, f'src/images/level1/{name_search}.jpg' )
+                    save_image(name_search)
                     play_again = True
 
                 # elif command == 5:
@@ -383,9 +380,7 @@ def level1(url):
         pygame.display.flip()
         pygame.time.delay(100)
 
-
         # pygame.display.update()
-
 
 # Example usage
 # file = read_file('./level1/input.txt')

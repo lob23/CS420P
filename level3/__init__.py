@@ -299,6 +299,7 @@ def print_visual_grid(map_data):
 def save_image_level3(visual_map, floor_index, grid_start_x, grid_start_y):
     draw(WIN, visual_map[floor_index], Boundary.N, Boundary.M, WIDTH, grid_start_x, grid_start_y)
     pygame.display.update()
+    is_folder_exists('src/images/level3')
     pygame.image.save(WIN, f'src/images/level3/floor{floor_index}.jpg')
 
 def level3(file):
