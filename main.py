@@ -49,29 +49,40 @@ def main():
     menu_command = 0
     count = 0
     while run:
-        menu_command = draw_menu(url)
+        menu_command = draw_menu()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
                 if menu_command == 1:
+                    url = get_file()
+                    if not url:
+                        break
                     level1(url)
                 elif menu_command == 2:
+                    url = get_file()
+                    if not url:
+                        break
                     print("level 2")
                     level2.level2(url)
                     # level2.main()
                 elif menu_command == 3:
+                    url = get_file()
+                    if not url:
+                        break
                     print("level 3")
                     level3(url)
                     count += 1
                     print(count)
                 elif menu_command == 4:
+                    url = get_file()
+                    if not url:
+                        break
                     level4(url)
                     level4('level4/test.txt')
                     print("level 4")
-                elif menu_command == 5:
-                    url = get_file()
+                    
                 
                     
 

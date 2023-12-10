@@ -229,7 +229,7 @@ def draw(win, grid, rows, column, width, grid_start_x, grid_start_y):
     pygame.display.update()
 
 
-def draw_menu(url):
+def draw_menu():
     WIN.fill('white')
     command = -1
     pygame.draw.rect(WIN, 'black', [100, 100, 300, 320])
@@ -245,22 +245,18 @@ def draw_menu(url):
     button3 = Button('Level 3', (120, 300))
     button4 = Button('Level 4', (120, 360))
     button5 = Button('Select File Again', (120, 420))
-    if(url):
-        button1.draw()
-        button2.draw()
-        button3.draw()
-        button4.draw()
-        if button4.check_clicked():
-            command = 4
-        if button1.check_clicked():
-            command = 1
-        if button2.check_clicked():
-            command = 2
-        if button3.check_clicked():
-            command = 3
-    button5.draw()
-    if(button5.check_clicked()):
-        command = 5
+    button1.draw()
+    button2.draw()
+    button3.draw()
+    button4.draw()
+    if button4.check_clicked():
+        command = 4
+    if button1.check_clicked():
+        command = 1
+    if button2.check_clicked():
+        command = 2
+    if button3.check_clicked():
+        command = 3
 
     return command
 
