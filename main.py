@@ -4,9 +4,44 @@ import level2.solution as level2
 from level3.__init__ import level3
 from level4.__init__ import level4
 from utils.ui import *
+from PyQt5.QtWidgets import QDialog, QPushButton, QFileDialog, QApplication, QVBoxLayout
+import os
+import urllib.parse
 
+
+class SelectFile(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.filename = None
+        self.init_ui()
+
+    def init_ui(self):
+        self.select_button = QPushButton("Select File")
+        self.select_button.clicked.connect(self.select_file)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.select_button)
+
+        self.setLayout(self.layout)
+
+    def select_file(self):
+        default_directory = os.getcwd()
+        filename, _ = QFileDialog.getOpenFileName(self, "Select File",default_directory)
+        if filename:
+            print(f"Selected file: {filename}")
+            self.filename = filename
+            self.close()
+            
+def get_file():
+    app = QApplication([])
+    window = SelectFile()
+    window.show()
+    app.exec_()
+    url = window.filename
+    return url
 
 def main():
+    url = None
     clock = pygame.time.Clock()
     clock.tick(5)
     run = True
@@ -15,29 +50,41 @@ def main():
     count = 0
     while run:
         menu_command = draw_menu()
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
             if pygame.MOUSEBUTTONDOWN:
                 if menu_command == 1:
-                    level1('src/maps/input.txt')
+                    url = get_file()
+                    if not url:
+                        break
+                    level1(url)
                 elif menu_command == 2:
+                    url = get_file()
+                    if not url:
+                        break
                     print("level 2")
-                    level2.level2('level2/input.txt')
+                    level2.level2(url)
                     # level2.main()
                 elif menu_command == 3:
+                    url = get_file()
+                    if not url:
+                        break
                     print("level 3")
-                    level3('src/maps/input.txt')
+                    level3(url)
                     count += 1
                     print(count)
                 elif menu_command == 4:
+                    url = get_file()
+                    if not url:
+                        break
+                    level4(url)
                     level4('level4/test.txt')
                     print("level 4")
-
-
-
+                    
+                
+                    
 
         pygame.time.delay(100)
         pygame.display.flip()

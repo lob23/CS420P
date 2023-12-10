@@ -241,12 +241,13 @@ def draw_menu():
     WIN.blit(txt, (135, 127))
     # menu exit button
     button1 = Button('Level 1', (120, 180))
-    button1.draw()
     button2 = Button('Level 2', (120, 240))
-    button2.draw()
     button3 = Button('Level 3', (120, 300))
-    button3.draw()
     button4 = Button('Level 4', (120, 360))
+    button5 = Button('Select File Again', (120, 420))
+    button1.draw()
+    button2.draw()
+    button3.draw()
     button4.draw()
     if button4.check_clicked():
         command = 4
