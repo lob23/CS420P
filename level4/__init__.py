@@ -7,6 +7,7 @@ from queue import Queue, PriorityQueue
 from utils.read_file import read_file
 from utils.ui import *
 
+
 def octile_distance(source, target):
     dx = abs(source[0] - target[0])
     dy = abs(source[1] - target[1])
@@ -359,19 +360,31 @@ class Anode:
     def reconstruct_path(self):
         path = []
         node = self
+        Visualizer.agent_visual[0] = Visualizer.visual_grid
+        for agent in node.agents:
+            Visualizer.agent_visual[int(agent.start[1:])] = copy.deepcopy(Visualizer.visual_grid)
         while node is not None:
-            Visualizer.visited_score += 1
-            for i in range(Anode.n):
-                pygame.time.wait(100)
-                draw_menu_level3(node.agents[i].cell()[2] - 1)
-                draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
-                     Visualizer.grid_start_x,
-                     Visualizer.grid_start_y)
-                Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][node.agents[i].cell()[1]].make_visited()
-                pygame.display.update()
             path.append(node)
             node = node.parent
         return path[::-1]
+
+
+def visual_path(path):
+    for node in path:
+        for i in range(Anode.n):
+            for agent in node.agents:
+                Visualizer.agent_visual[int(agent.start[1:])][agent.cell()[2] - 1][agent.cell()[0]][
+                    agent.cell()[1]].make_visited()
+            Visualizer.visual_grid[node.agents[i].cell()[2] - 1][node.agents[i].cell()[0]][
+                node.agents[i].cell()[1]].make_path()
+            draw(WIN, Visualizer.visual_grid[node.agents[i].cell()[2] - 1], Boundary.N, Boundary.M, WIDTH,
+                 Visualizer.grid_start_x,
+                 Visualizer.grid_start_y)
+            pygame.display.update()
+        pygame.time.wait(100)
+    num_agent = len(path[0].agents)
+    len_path = len(path)
+    Visualizer.visited_score = num_agent * len_path
 
 
 def prevent_deadlock(agents):
@@ -400,16 +413,20 @@ def prevent_deadlock(agents):
                     if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x, y + 1, z))
                         break
-                    if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
+                    if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (
+                    x - 1, y - 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x - 1, y - 1, z))
                         break
-                    if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
+                    if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][
+                        y - 1] == "0" and (x + 1, y - 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x + 1, y - 1, z))
                         break
-                    if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] == "0" and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
+                    if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] == "0" and \
+                            grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x + 1, y + 1, z))
                         break
-                    if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] == "0" and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
+                    if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] == "0" and grid[x - 1][
+                        y + 1] == "0" and (x - 1, y + 1, z) not in union:
                         agents[i].get_out_of_the_way(j, (x - 1, y + 1, z))
                         break
 
@@ -449,6 +466,7 @@ def mapf(map_data):
                     frontier.queue.pop(index)
                     frontier.put(child)
     return None
+
 
 def print_visual_grid(map_data):
     visual_map = []
@@ -560,7 +578,6 @@ def level4(url):
                     else:
                         agent_index = 0
 
-
                 #  Exit menu
                 if command == 0:
                     playagain = False
@@ -568,10 +585,6 @@ def level4(url):
 
             pygame.time.wait(100)
             pygame.display.flip()
-
-
-
-
 
 
 def test():

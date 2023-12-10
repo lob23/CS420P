@@ -25,7 +25,7 @@ def main():
                     level1('src/maps/input.txt')
                 elif menu_command == 2:
                     print("level 2")
-                    level2.level2('src/maps/input.txt')
+                    level2.level2('level2/input.txt')
                     # level2.main()
                 elif menu_command == 3:
                     print("level 3")
