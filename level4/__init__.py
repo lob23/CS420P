@@ -299,9 +299,9 @@ class Agent:
                 return 1
         return 2
 
-    def get_out_of_the_way(self, cell):
-        self.path.insert(1, (None, cell[0], cell[1], cell[2]))
-        self.path.insert(2, self.path[0])
+    def get_out_of_the_way(self, position, cell):
+        self.path.insert(position + 1, (None, cell[0], cell[1], cell[2]))
+        self.path.insert(position + 2, self.path[0])
 
     def __str__(self):
         return self.start + " " + str(self.cell())
@@ -380,34 +380,37 @@ def prevent_deadlock(agents):
         intersection = a1_path.intersection(ai_path)
         union = a1_path.union(ai_path)
         if agents[0].path[0][1:] in intersection and agents[i].path[0][1:] in intersection:
-            x = agents[i].path[0][1]
-            y = agents[i].path[0][2]
-            z = agents[i].path[0][3]
-            grid = Agent.map_data[f'floor{z}']['floor_data']
-            if x > 0 and grid[x - 1][y] == "0" and (x - 1, y, z) not in union:
-                agents[i].get_out_of_the_way((x - 1, y, agents[0].path[0][3]))
-                break
-            if x < Boundary.N - 1 and grid[x + 1][y] == "0" and (x + 1, y, z) not in union:
-                agents[i].get_out_of_the_way((x + 1, y, agents[0].path[0][3]))
-                break
-            if y > 0 and grid[x][y - 1] == "0" and (x, y - 1, z) not in union:
-                agents[i].get_out_of_the_way((x, y - 1, agents[0].path[0][3]))
-                break
-            if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
-                agents[i].get_out_of_the_way((x, y + 1, agents[0].path[0][3]))
-                break
-            if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
-                agents[i].get_out_of_the_way((x - 1, y - 1, agents[0].path[0][3]))
-                break
-            if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
-                agents[i].get_out_of_the_way((x + 1, y - 1, agents[0].path[0][3]))
-                break
-            if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
-                agents[i].get_out_of_the_way((x + 1, y + 1, agents[0].path[0][3]))
-                break
-            if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
-                agents[i].get_out_of_the_way((x - 1, y + 1, agents[0].path[0][3]))
-                break
+            intersection.remove(agents[0].path[0][1:])
+            for j, cell in enumerate(agents[i].path):
+                if cell[1:] in intersection:
+                    x = cell[1]
+                    y = cell[2]
+                    z = cell[3]
+                    grid = Agent.map_data[f'floor{z}']['floor_data']
+                    if x > 0 and grid[x - 1][y] == "0" and (x - 1, y, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x - 1, y, z))
+                        break
+                    if x < Boundary.N - 1 and grid[x + 1][y] == "0" and (x + 1, y, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x + 1, y, z))
+                        break
+                    if y > 0 and grid[x][y - 1] == "0" and (x, y - 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x, y - 1, z))
+                        break
+                    if y < Boundary.M - 1 and grid[x][y + 1] == "0" and (x, y + 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x, y + 1, z))
+                        break
+                    if x > 0 and y > 0 and grid[x - 1][y] == "0" and grid[x][y - 1] and grid[x - 1][y - 1] == "0" and (x - 1, y - 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x - 1, y - 1, z))
+                        break
+                    if x < Boundary.N - 1 and y > 0 and grid[x + 1][y] == "0" and grid[x][y - 1] == "0" and grid[x + 1][y - 1] == "0" and (x + 1, y - 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x + 1, y - 1, z))
+                        break
+                    if x < Boundary.N - 1 and y < Boundary.M - 1 and grid[x + 1][y] == "0" and grid[x][y + 1] == "0" and grid[x + 1][y + 1] == "0" and (x + 1, y + 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x + 1, y + 1, z))
+                        break
+                    if x > 0 and y < Boundary.M - 1 and grid[x - 1][y] == "0" and grid[x][y + 1] == "0" and grid[x - 1][y + 1] == "0" and (x - 1, y + 1, z) not in union:
+                        agents[i].get_out_of_the_way(j, (x - 1, y + 1, z))
+                        break
 
 
 def mapf(map_data):
